@@ -1,0 +1,3940 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>אטקטיקו - atacktico</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: 'Heebo', sans-serif;
+      background: #050b16;
+      color: #f8fafc;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+    canvas { display: block; touch-action: none; }
+    .screen-layer {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      overflow-y: auto;
+    }
+    .hidden { display: none !important; }
+    .glass-card {
+      background: rgba(11, 19, 34, 0.94);
+      border: 1px solid rgba(56, 74, 102, 0.85);
+      border-radius: 22px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(14px);
+    }
+    .menu-fade { transition: opacity 2.2s ease, transform 2.2s ease; }
+    .menu-screensaver { opacity: 0.04; }
+    .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scroll::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 6px; }
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.45); opacity: 0.5; }
+    }
+    .unread-dot { animation: pulseDot 1.15s infinite; }
+    @keyframes blinkTap {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.98); }
+    }
+    .tap-blink { animation: blinkTap 1.4s infinite; }
+  </style>
+</head>
+<body>
+
+  <!-- קנבס ראשי: מסך טעינה, רקע רחפן חי וזירת קרב 60FPS -->
+  <canvas id="gameCanvas" class="fixed inset-0 w-full h-full z-0"></canvas>
+
+  <!-- 1. מסך טעינה עצמאי (0% - 100% + טבעת מסתובבת + גע במסך להמשך) -->
+  <div id="splashScreen" class="screen-layer z-50 bg-slate-950/60 cursor-pointer">
+    <div class="glass-card max-w-md w-full p-7 text-center space-y-5 border-sky-500/40 pointer-events-none">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-sky-500/15 border border-sky-400/30 text-sky-300 text-xs font-bold">
+        <span>⚔️</span>
+        <span>אסטרטגיה טקטית • TC • גשרים • תובלה • אונליין</span>
+      </div>
+      <div>
+        <h1 class="text-4xl sm:text-5xl font-black tracking-tight text-white">אטקטיקו</h1>
+        <div class="text-lg font-black tracking-widest text-sky-400 uppercase mt-0.5">atacktico</div>
+      </div>
+      <div class="w-full bg-slate-800/90 rounded-full h-3.5 overflow-hidden border border-slate-700 p-0.5">
+        <div id="splashBar" class="bg-gradient-to-r from-sky-500 via-blue-500 to-emerald-400 h-full rounded-full transition-all duration-75" style="width: 0%"></div>
+      </div>
+      <div id="splashPercent" class="text-xl font-black text-sky-400">0%</div>
+      <div id="splashTapPrompt" class="hidden tap-blink py-2.5 px-4 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 font-black text-base">
+        👆 גע במסך להמשך
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. מודאל בחירת כינוי מפקד -->
+  <div id="nicknameModal" class="screen-layer z-50 bg-slate-950/90 hidden">
+    <div class="glass-card max-w-sm w-full p-6 text-center space-y-4">
+      <div class="text-4xl">🎖️</div>
+      <h2 class="text-2xl font-black text-white">שם / כינוי מפקד</h2>
+      <p class="text-xs text-slate-400">הכינוי יופיע בחדרי האונליין, בצ'אט וביומן המלחמה:</p>
+      <input id="nicknameInput" type="text" maxlength="18" placeholder="הזן כינוי מפקד..." class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-600 text-white text-center font-bold focus:outline-none focus:border-sky-400" />
+      <button id="btnSaveNickname" class="w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black active:scale-95 transition">
+        שמור והמשך ◀
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. תפריט ראשי -->
+  <div id="mainMenu" class="screen-layer z-30 hidden">
+    <div id="mainMenuCard" class="glass-card max-w-lg w-full p-5 sm:p-7 space-y-4 menu-fade">
+      <div class="flex items-center justify-between gap-2 bg-slate-800/80 px-3.5 py-2 rounded-2xl border border-slate-700">
+        <button id="btnEditNickname" class="flex items-center gap-2 text-xs sm:text-sm font-bold text-amber-300 hover:text-amber-200">
+          <span>🎖️ מפקד:</span>
+          <span id="displayNickname" class="underline decoration-dotted">מפקד טקטי</span>
+          <span class="text-[10px] bg-slate-700 px-1.5 py-0.5 rounded text-slate-300">ערוך</span>
+        </button>
+        <button id="btnResumeAutoSave" class="hidden text-[11px] bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 px-2.5 py-1 rounded-lg font-bold">
+          💾 המשך קרב שמור
+        </button>
+      </div>
+
+      <div class="text-center">
+        <h1 class="text-3xl sm:text-4xl font-black text-white">אטקטיקו <span class="text-sky-400 text-2xl sm:text-3xl">atacktico</span></h1>
+        <p class="text-xs text-slate-400 mt-1">מפקדת TC • גשרים דו-מפלסיים • תובלה • מכ"ם • אונליין VS</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <button id="btnMenuOnline" class="sm:col-span-2 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-base shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2.5 active:scale-95 transition">
+          <span>🌐</span>
+          <span>משחק אונליין VS (לובי חדרים וצייר)</span>
+        </button>
+
+        <button id="btnMenuCampaign" class="py-3.5 px-4 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-black text-sm shadow-lg flex items-center justify-center gap-2 active:scale-95 transition">
+          <span>🏆</span>
+          <span>קמפיין 50 שלבים</span>
+        </button>
+
+        <button id="btnMenuCustom" class="py-3.5 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition">
+          <span>⚔️</span>
+          <span>חדר פיקוד מקומי (VS / AI)</span>
+        </button>
+
+        <button id="btnMenuTutorial" class="py-3 px-4 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-300 font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition">
+          <span>🎓</span>
+          <span>מדריך מעשי (25 שלבים)</span>
+        </button>
+
+        <button id="btnMenuMapEditor" class="py-3 px-4 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition">
+          <span>🎨</span>
+          <span>עורך מפות (צייר)</span>
+        </button>
+
+        <button id="btnMenuSettings" class="sm:col-span-2 py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition">
+          <span>⚙️</span>
+          <span>הגדרות וכלים</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. מסך קמפיין 50 שלבים -->
+  <div id="campaignScreen" class="screen-layer z-40 bg-slate-950/92 hidden">
+    <div class="glass-card max-w-2xl w-full p-5 sm:p-6 space-y-4 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h2 class="text-xl font-black text-white">🏆 קמפיין 50 שלבים (Storyline)</h2>
+          <p class="text-xs text-slate-400">הדגל מוגן בעורף • ללא לחץ זמן (למעט שלבי אתגר צדדי מיוחד עם מטרה נלווית)</p>
+        </div>
+        <button id="btnCloseCampaign" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold">✖ סגור</button>
+      </div>
+      <div id="campaignGrid" class="grid grid-cols-5 sm:grid-cols-10 gap-2 overflow-y-auto custom-scroll p-1 flex-1"></div>
+    </div>
+  </div>
+
+  <!-- 5. חדר פיקוד מקומי -->
+  <div id="customScreen" class="screen-layer z-40 bg-slate-950/92 hidden">
+    <div class="glass-card max-w-lg w-full p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto custom-scroll">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h2 class="text-xl font-black text-white">⚔️ חדר פיקוד מקומי (VS / AI)</h2>
+        <button id="btnCloseCustom" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold">✖ סגור</button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">מצב ובריתות:</label>
+            <select id="customModeSelect" class="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-600 text-white font-bold">
+              <option value="ai_1v1">🤖 1 נגד 1 (נגד מחשב)</option>
+              <option value="local_vs">👥 2 שחקנים (VS מקומי)</option>
+              <option value="alliance_2v2">🤝 ברית 2 נגד 2 (חשיפה הדדית)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">רמת קושי AI:</label>
+            <select id="customAiDiff" class="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-600 text-white font-bold">
+              <option value="easy">קל</option>
+              <option value="medium" selected>בינוני</option>
+              <option value="hard">קשה</option>
+              <option value="brutal">אכזרי</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">שורות (8–99):</label>
+            <input id="customRows" type="number" min="8" max="99" value="12" class="w-full p-2 rounded-xl bg-slate-800 border border-slate-600 text-center font-bold" />
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">עמודות (8–99):</label>
+            <input id="customCols" type="number" min="8" max="99" value="10" class="w-full p-2 rounded-xl bg-slate-800 border border-slate-600 text-center font-bold" />
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">קוטר TC:</label>
+            <select id="customTcRadius" class="w-full p-2 rounded-xl bg-slate-800 border border-slate-600 font-bold">
+              <option value="3">בינוני (3)</option>
+              <option value="2">קטן (2)</option>
+              <option value="5">גדול (5)</option>
+              <option value="8">ענק (8)</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">תבנית מפה:</label>
+            <select id="customMapPreset" class="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-600 text-white font-bold">
+              <option value="classic_bridges">נהר וגשרים קלאסי</option>
+              <option value="twin_bridges">איי הגשרים התאומים</option>
+              <option value="river_delta">נהר מתפתל ודלתא</option>
+              <option value="coral_maze">מבוך אלמוגים ותעלות</option>
+              <option value="peninsula_fort">מבצר חצי-אי</option>
+              <option value="four_corners">ארבע פינות יבשתיות</option>
+              <option value="cross_bridges">גשרים מצטלבים (מעל/מתחת)</option>
+              <option value="archipelago">ארכיפלג איים</option>
+              <option value="canyon_pass">מעבר הקניון</option>
+              <option value="random_islands">שרשרת איים אקראית</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">שלב התחלה:</label>
+            <select id="customDeployMode" class="w-full p-2.5 rounded-xl bg-slate-800 border border-slate-600 font-bold">
+              <option value="tc_setup">🏛️ הצבת TC ופריסה ידנית</option>
+              <option value="instant">⚡ כניסה מיידית לקרב</option>
+            </select>
+          </div>
+        </div>
+        <div class="bg-slate-950/90 p-2.5 rounded-xl border border-slate-700 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-emerald-400">🗺️ תצוגה מקדימה של המפה</span>
+            <button id="btnOpenCustomPainter" type="button" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow active:scale-95 transition">
+              🖌️ ערוך מפה (צייר)
+            </button>
+          </div>
+          <canvas id="customPreviewCanvas" class="w-full h-32 rounded-lg bg-slate-900 border border-slate-800"></canvas>
+        </div>
+      </div>
+      <button id="btnStartCustomBattle" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-black text-base shadow-lg active:scale-95 transition">
+        🚀 התחל קרב
+      </button>
+    </div>
+  </div>
+
+  <!-- 6. הגדרות וכלים -->
+  <div id="settingsScreen" class="screen-layer z-40 bg-slate-950/92 hidden">
+    <div class="glass-card max-w-md w-full p-5 sm:p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h2 class="text-xl font-black text-white">⚙️ הגדרות וכלים</h2>
+        <button id="btnCloseSettings" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold">✖ סגור</button>
+      </div>
+      <div class="space-y-2.5 text-sm">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">ערכת נושא ללוח:</label>
+            <select id="optBoardTheme" class="w-full p-2 rounded-xl bg-slate-800 border border-slate-600 font-bold text-xs">
+              <option value="forest">יער טקטי (קלאסי)</option>
+              <option value="desert">מדבר סערה</option>
+              <option value="arctic">קרחון צפוני</option>
+              <option value="night">מבצע לילי</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">גודל אסימונים:</label>
+            <select id="optTokenScale" class="w-full p-2 rounded-xl bg-slate-800 border border-slate-600 font-bold text-xs">
+              <option value="0.39">רגיל (100%)</option>
+              <option value="0.45">מוגדל (115%)</option>
+              <option value="0.33">קומפקטי (85%)</option>
+            </select>
+          </div>
+        </div>
+        <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/70 border border-slate-700">
+          <span>🔊 אפקטים קוליים (WebAudio)</span>
+          <input id="optSound" type="checkbox" checked class="w-5 h-5 accent-sky-400" />
+        </label>
+        <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/70 border border-slate-700">
+          <span>📳 רטט בפעולות שחקן</span>
+          <input id="optVibPlayer" type="checkbox" checked class="w-5 h-5 accent-sky-400" />
+        </label>
+        <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/70 border border-slate-700">
+          <span>📳 רטט בתור יריב / פגיעה</span>
+          <input id="optVibEnemy" type="checkbox" checked class="w-5 h-5 accent-sky-400" />
+        </label>
+        <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/70 border border-slate-700">
+          <span>♟️ סרגל קואורדינטות שחמט (A–Z / 1–99)</span>
+          <input id="optCoords" type="checkbox" checked class="w-5 h-5 accent-sky-400" />
+        </label>
+        <button id="btnResetProgress" class="w-full py-2.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/60 border border-rose-500/40 text-rose-300 text-xs font-bold">
+          🗑️ אפס התקדמות קמפיין ושמירות מקומיות
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. לובי אונליין VS -->
+  <div id="onlineLobbyScreen" class="screen-layer z-40 bg-slate-950/92 hidden">
+    <div class="glass-card max-w-2xl w-full p-5 sm:p-6 space-y-4 max-h-[92vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h2 class="text-xl font-black text-emerald-400">🌐 לובי חדרים פעילים אונליין VS</h2>
+        <button id="btnCloseOnlineLobby" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold">✖ סגור</button>
+      </div>
+
+      <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 space-y-2.5">
+        <div class="text-xs font-bold text-slate-300">➕ פתיחת חדר קרב חדש או הצטרפות בקוד חדר (GitHub Pages / P2P):</div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input id="newRoomName" type="text" placeholder="שם החדר (אופציונלי)" class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-xs text-white" />
+          <input id="newRoomPass" type="text" placeholder="סיסמה לחדר (אופציונלי)" class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-xs text-white" />
+          <button id="btnCreateOnlineRoom" class="py-2 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs active:scale-95 transition">
+            צור חדר והיכנס ◀
+          </button>
+        </div>
+        <div class="flex gap-2 pt-1 border-t border-slate-800/80">
+          <input id="joinByCodeInput" type="text" placeholder="הדבק קוד חדר אונליין להצטרפות ישירה..." class="flex-1 px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-xs text-white font-mono" />
+          <button id="btnJoinByCode" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs active:scale-95 transition">
+            🔗 הצטרף לקוד
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto custom-scroll flex-1">
+        <div class="space-y-2">
+          <div class="text-xs font-black text-sky-400">📡 חדרים פעילים כעת:</div>
+          <div id="activeRoomsList" class="space-y-2"></div>
+        </div>
+        <div class="space-y-2">
+          <div class="text-xs font-black text-amber-400">⭐ חדרים שמורים:</div>
+          <div id="savedRoomsList" class="space-y-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. חדר המתנה אונליין -->
+  <div id="onlineRoomScreen" class="screen-layer z-40 bg-slate-950/95 hidden">
+    <div class="glass-card max-w-3xl w-full p-4 sm:p-6 space-y-3 max-h-[94vh] flex flex-col">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 id="roomTitleDisplay" class="text-lg sm:text-xl font-black text-white">חדר קרב</h2>
+            <span id="roomPassBadge" class="text-[11px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-lg border border-amber-500/30">פתוח</span>
+          </div>
+          <p class="text-[11px] text-slate-400">רק האדמין משנה הגדרות ומצייר מפה; תצוגה מקדימה גלויה לכולם.</p>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button id="btnSaveRoomPreset" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold">⭐ שמור הגדרות</button>
+          <button id="btnCloseRoom" class="px-2.5 py-1.5 rounded-xl bg-rose-600/80 hover:bg-rose-500 text-white text-xs font-bold">🔒 סגור חדר</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scroll flex-1 pr-0.5">
+        <div class="space-y-2.5 bg-slate-900/80 p-3 rounded-2xl border border-slate-800">
+          <div class="flex items-center justify-between gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-2.5 py-1.5 text-[11px]">
+            <span class="text-emerald-300 font-bold truncate">🌐 קוד חדר: <strong id="roomOnlineCode" class="font-mono text-white">LOCAL-VS</strong></span>
+            <button id="btnCopyRoomInvite" type="button" class="shrink-0 px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black">📋 העתק קישור</button>
+          </div>
+          <div class="flex items-center justify-between gap-1">
+            <select id="roomMapPreset" class="flex-1 p-2 rounded-xl bg-slate-800 border border-slate-600 text-xs font-bold text-white">
+              <option value="classic_bridges">נהר וגשרים קלאסי</option>
+              <option value="twin_bridges">איי הגשרים התאומים</option>
+              <option value="river_delta">נהר מתפתל ודלתא</option>
+              <option value="coral_maze">מבוך אלמוגים ותעלות</option>
+              <option value="peninsula_fort">מבצר חצי-אי</option>
+              <option value="four_corners">ארבע פינות יבשתיות</option>
+              <option value="cross_bridges">גשרים מצטלבים (מעל/מתחת)</option>
+              <option value="archipelago">ארכיפלג איים</option>
+              <option value="canyon_pass">מעבר הקניון</option>
+              <option value="random_islands">שרשרת איים אקראית</option>
+              <option value="custom_drawn">🎨 מפה מותאמת אישית</option>
+            </select>
+            <button id="btnRandomMapRoom" class="px-2.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold">🎲 הגרל</button>
+            <button id="btnLoadSavedIntoRoom" class="px-2.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold">📂 טען</button>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1.5 text-xs">
+            <select id="roomTcRadius" class="p-2 rounded-xl bg-slate-800 border border-slate-600 font-bold">
+              <option value="3">TC בינוני (3)</option>
+              <option value="2">קוטר TC קטן (2)</option>
+              <option value="4">קוטר TC גדול (4)</option>
+              <option value="6">קוטר TC ענק (6)</option>
+            </select>
+            <select id="roomArsenal" class="p-2 rounded-xl bg-slate-800 border border-slate-600 font-bold">
+              <option value="full">ארסנל מלא (25)</option>
+              <option value="fast">ארסנל מהיר (15)</option>
+            </select>
+            <select id="roomTurnTime" class="p-2 rounded-xl bg-slate-800 border border-slate-600 font-bold">
+              <option value="60">60 שניות</option>
+              <option value="30">30 שניות</option>
+              <option value="90">90 שניות</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-1.5 text-xs">
+            <div class="flex items-center justify-between bg-slate-800 border border-slate-600 rounded-xl px-2.5 py-1.5">
+              <span class="text-slate-300 font-bold">📏 שורות (8–99):</span>
+              <input id="roomRows" type="number" min="8" max="99" value="12" class="w-14 p-1 rounded-lg bg-slate-900 border border-slate-700 text-center font-black text-white" />
+            </div>
+            <div class="flex items-center justify-between bg-slate-800 border border-slate-600 rounded-xl px-2.5 py-1.5">
+              <span class="text-slate-300 font-bold">📐 עמודות (8–99):</span>
+              <input id="roomCols" type="number" min="8" max="99" value="10" class="w-14 p-1 rounded-lg bg-slate-900 border border-slate-700 text-center font-black text-white" />
+            </div>
+          </div>
+
+          <div class="bg-slate-950/90 p-2.5 rounded-xl border border-slate-700 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-emerald-400">🗺️ תצוגה מקדימה (גלויה לכולם)</span>
+              <button id="btnOpenMapPainter" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow active:scale-95 transition">
+                🖌️ כלי העריכה (צייר)
+              </button>
+            </div>
+            <canvas id="roomPreviewCanvas" class="w-full h-36 rounded-lg bg-slate-900 border border-slate-800"></canvas>
+          </div>
+        </div>
+
+        <div class="space-y-2.5 flex flex-col justify-between bg-slate-900/80 p-3 rounded-2xl border border-slate-800">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-sky-400">👥 משתתפים בחדר:</span>
+              <button id="btnSimJoinPlayer" class="text-[11px] bg-slate-800 hover:bg-slate-700 px-2 py-0.5 rounded text-slate-300">+ דמה הצטרפות יריב</button>
+            </div>
+            <div id="roomPlayersList" class="space-y-1.5"></div>
+          </div>
+
+          <div class="space-y-1.5 flex-1 flex flex-col justify-end">
+            <span class="text-xs font-black text-slate-400">💬 צ'אט חדר:</span>
+            <div id="roomChatMessages" class="h-28 overflow-y-auto custom-scroll bg-slate-950/80 rounded-xl p-2 text-xs space-y-1 border border-slate-800"></div>
+            <div class="flex gap-1.5">
+              <input id="roomChatInput" type="text" placeholder="כתוב הודעה..." class="flex-1 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-600 text-xs text-white" />
+              <button id="btnSendRoomChat" class="px-3 py-1.5 rounded-xl bg-sky-500 text-slate-950 font-black text-xs">שלח</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 pt-1">
+        <button id="btnToggleReady" class="hidden flex-1 py-3 rounded-2xl bg-amber-500 text-slate-950 font-black text-sm">⏳ לא מוכן (לחץ לאישור)</button>
+        <button id="btnStartOnlineBattle" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-sky-500 text-slate-950 font-black text-base shadow-lg active:scale-95 transition">
+          🚀 התחל קרב אונליין (הצבת TC)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. חלון מוגדל לצייר מפות -->
+  <div id="painterModal" class="screen-layer z-50 bg-slate-950/98 hidden">
+    <div class="glass-card max-w-3xl w-full h-[92vh] p-4 flex flex-col justify-between gap-2">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <div>
+          <h3 class="text-base sm:text-lg font-black text-amber-400">🖌️ צייר מפות מוגדל</h3>
+          <p class="text-[11px] text-slate-400">אצבע אחת מציירת • שתי אצבעות מזיזות ומגדילות/מקטינות את המפה בחופשיות ללא ציור</p>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button id="btnPainterZoomOut" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold">➖</button>
+          <button id="btnPainterZoomReset" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold">🎯</button>
+          <button id="btnPainterZoomIn" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold">➕</button>
+        </div>
+      </div>
+
+      <canvas id="painterCanvas" class="w-full flex-1 rounded-2xl bg-slate-900 border border-slate-700"></canvas>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button data-brush="-1" class="painter-terrain-btn px-3 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold">✋ תזוזה חופשית (עיון)</button>
+          <button data-brush="0" class="painter-terrain-btn px-3 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black">🌿 יבשה</button>
+          <button data-brush="1" class="painter-terrain-btn px-3 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold">🌊 ים</button>
+          <button data-brush="2" class="painter-terrain-btn px-3 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold">🌉 גשר אופקי</button>
+          <button data-brush="3" class="painter-terrain-btn px-3 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold">🌉 גשר אנכי</button>
+        </div>
+        <div class="flex items-center gap-1">
+          <button data-size="1" class="painter-size-btn px-2.5 py-2 rounded-xl bg-sky-500 text-slate-950 text-xs font-black">1×1</button>
+          <button data-size="2" class="painter-size-btn px-2.5 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold">2×2</button>
+          <button data-size="3" class="painter-size-btn px-2.5 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold">3×3</button>
+        </div>
+        <button id="btnSavePaintedMap" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-sky-500 text-slate-950 font-black text-sm">
+          ✔ שמור ועדכן מפה
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. ממשק הקרב הפעיל (HUD) -->
+  <div id="battleHud" class="fixed inset-0 pointer-events-none z-20 flex flex-col justify-between p-2.5 sm:p-4 hidden">
+    <!-- סרגל עליון -->
+    <div class="flex flex-col gap-1.5">
+      <div class="flex items-center justify-between gap-2 pointer-events-auto">
+        <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700/80 p-1.5 rounded-2xl shadow-lg">
+          <button id="btnBattleMenu" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-black">🏠 תפריט</button>
+          <button id="btnCamZoomOut" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold">➖</button>
+          <button id="btnCamReset" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold">🎯</button>
+          <button id="btnCamZoomIn" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold">➕</button>
+          <button id="btnBattleChatBubble" class="relative px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold">
+            💬
+            <span id="battleChatUnreadDot" class="hidden unread-dot absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+          </button>
+        </div>
+
+        <!-- חיווי תור ושעון -->
+        <div class="flex items-center gap-2.5 bg-slate-900/90 border border-slate-700 px-3.5 py-1.5 rounded-2xl shadow-lg">
+          <div id="battleTimerWrapper" class="flex items-center gap-2">
+            <span class="text-amber-400 font-black text-xs sm:text-sm">⏱️ <span id="battleTimerText">60s</span></span>
+            <div class="h-4 w-[1px] bg-slate-700"></div>
+          </div>
+          <span id="battleTurnDot" class="w-3 h-3 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></span>
+          <span id="battleTurnLabel" class="text-xs sm:text-sm font-black text-sky-300">תורך</span>
+        </div>
+      </div>
+
+      <!-- באנר מטרה נלווית / אתגר צדדי בקמפיין -->
+      <div id="sideObjectiveBanner" class="hidden pointer-events-auto mx-auto bg-amber-500/15 border border-amber-400/50 text-amber-200 px-3.5 py-1.5 rounded-xl text-xs font-bold shadow">
+        🎯 <span id="sideObjectiveText">מטרה נלווית</span>
+      </div>
+    </div>
+
+    <!-- פאנל הצבת בסיס TC וארסנל כלים — מעוגן בתחתית המסך בצורה מינימלית ונוחה -->
+    <div id="deployPanel" class="pointer-events-auto fixed bottom-14 left-1/2 -translate-x-1/2 z-30 max-w-xl w-[95%] bg-slate-900/95 border border-amber-400/50 rounded-2xl px-3 py-2 shadow-2xl space-y-1.5 hidden">
+      <div class="flex items-center justify-between gap-2 text-[11px] sm:text-xs">
+        <span id="deployTitle" class="font-black text-amber-300 truncate">🏛️ לחץ על יבשה להקמת TC (לחיצה על כלי מוצב מחזירה אותו)</span>
+        <div class="flex gap-1.5 shrink-0">
+          <button id="btnResetDeploy" class="px-2.5 py-1 rounded-xl bg-rose-600/85 hover:bg-rose-500 text-white font-black text-[11px]">🔄 אפס הכל</button>
+          <button id="btnAutoDeploy" class="px-2.5 py-1 rounded-xl bg-sky-500 text-slate-950 font-black text-[11px]">⚡ אוטומטי</button>
+          <button id="btnConfirmDeploy" class="hidden px-2.5 py-1 rounded-xl bg-emerald-500 text-slate-950 font-black text-[11px]">✔ סיים הצבה</button>
+        </div>
+      </div>
+      <div id="deployTray" class="flex gap-1.5 overflow-x-auto custom-scroll py-0.5"></div>
+    </div>
+
+    <!-- כרטיסיית פרטי כלי נבחר בקרב + אפשרות גרירה חופשית + מזעור מינימלי -->
+    <div id="selectedUnitCard" class="pointer-events-auto fixed left-1/2 -translate-x-1/2 z-30 max-w-md w-[94%] bg-slate-900/95 border border-sky-400/50 rounded-2xl p-3 shadow-2xl space-y-2 transition-shadow duration-200 hidden" style="bottom: 64px;">
+      <div id="sucFullBody" class="space-y-2">
+        <div id="sucDragHandle" class="flex items-center justify-between text-[10px] text-slate-400 border-b border-slate-800/80 pb-1 cursor-grab active:cursor-grabbing">
+          <span>⠿ גרור כרטיסייה להזזה</span>
+          <span>פרטי יחידה</span>
+        </div>
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <div id="sucIcon" class="w-10 h-10 rounded-xl bg-sky-900/70 border border-sky-400/50 flex items-center justify-center text-2xl shrink-0">⚔️</div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="sucName" class="text-sm font-black text-white">סמל</span>
+                <span id="sucRank" class="text-[11px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md font-bold">דרגה 4</span>
+              </div>
+              <p id="sucDesc" class="text-xs text-slate-300 mt-0.5 leading-snug">יחידת חי"ר טקטית הנעה משבצת אחת.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button id="btnMinimizeUnitCard" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-bold">⌄ מזער</button>
+            <button id="btnCloseUnitCard" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-black">×</button>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-800">
+          <button id="btnUnitAbility" class="hidden px-3 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs">📡 הפעל יכולת</button>
+          <button id="btnUnitAttack" class="hidden px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs">⚔️ תקוף סמוך</button>
+          <button id="btnUnitBluffReveal" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sky-300 font-bold text-xs">👁️ חשוף ליריב (הטעיה)</button>
+          <button id="btnUnitLoad" class="hidden px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs">📦 העמס יחידה</button>
+          <button id="btnUnitUnload" class="hidden px-3 py-1.5 rounded-xl bg-teal-400 hover:bg-teal-300 text-slate-950 font-black text-xs">🪂 פרוק יחידה</button>
+        </div>
+      </div>
+
+      <!-- תצוגה ממוזערת מינימלית בתחתית המסך -->
+      <div id="sucMiniBar" class="hidden flex items-center justify-between gap-2 py-0.5 px-1 text-xs">
+        <div class="flex items-center gap-2 truncate">
+          <span id="sucMiniIcon" class="text-base">⚔️</span>
+          <span id="sucMiniName" class="font-black text-white">סמל</span>
+          <span id="sucMiniRank" class="text-[11px] text-amber-300 font-bold">דרגה 4</span>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="btnExpandUnitCard" class="px-2.5 py-0.5 rounded-lg bg-sky-500/20 border border-sky-400/40 text-sky-300 font-bold">⌃ הרחב</button>
+          <button id="btnCloseUnitCardMini" class="px-2 py-0.5 rounded-lg bg-slate-800 text-slate-300 font-black">×</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- באנר מדריך מעשי (25 שלבים מובחנים + הדגמת אנימציה חיה + גרירה חופשית) -->
+    <div id="tutorialBanner" class="pointer-events-auto fixed top-16 left-1/2 -translate-x-1/2 z-30 max-w-xl w-[94%] bg-slate-900/95 border border-amber-400/50 rounded-2xl p-3 shadow-2xl space-y-2 hidden">
+      <div id="tutDragHandle" class="flex items-center justify-between text-xs cursor-grab active:cursor-grabbing border-b border-slate-800 pb-1">
+        <span class="font-black text-amber-400">⠿ 🎓 מדריך מעשי — שלב <span id="tutStepNum">1</span> מתוך 25</span>
+        <span id="tutPercent" class="text-slate-400 font-bold">4%</span>
+      </div>
+      <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+        <div id="tutProgressBar" class="bg-amber-400 h-full transition-all" style="width: 4%"></div>
+      </div>
+      <p id="tutStepDesc" class="text-xs sm:text-sm text-slate-200 leading-relaxed"></p>
+      <div class="flex items-center justify-between gap-1.5 pt-1">
+        <div class="flex gap-1.5">
+          <button id="btnTutReset" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold">🔄 אפס</button>
+          <button id="btnTutReplayDemo" class="px-2.5 py-1.5 rounded-xl bg-sky-500/20 border border-sky-400/40 text-sky-300 text-xs font-bold">🎬 הדגם מהלך חי</button>
+        </div>
+        <div class="flex gap-1.5">
+          <button id="btnTutPrev" class="px-3 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold">▶ הקודם</button>
+          <button id="btnTutNext" class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-black">המשך ◀</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- בועת צ'אט צפה בקרב -->
+    <div id="battleChatPopover" class="pointer-events-auto fixed top-16 left-4 z-40 w-72 bg-slate-900/95 border border-slate-700 rounded-2xl p-3 shadow-2xl space-y-2 hidden">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+        <span class="text-xs font-black text-sky-400">💬 צ'אט קרב חי</span>
+        <button id="btnCloseBattleChat" class="text-xs text-slate-400 hover:text-white">✖</button>
+      </div>
+      <div id="battleChatList" class="h-32 overflow-y-auto custom-scroll space-y-1 text-xs bg-slate-950/80 p-2 rounded-xl"></div>
+      <div class="flex gap-1">
+        <input id="battleChatInput" type="text" placeholder="הודעה ליריב..." class="flex-1 px-2.5 py-1.5 rounded-xl bg-slate-800 border border-slate-600 text-xs text-white" />
+        <button id="btnSendBattleChat" class="px-3 py-1.5 rounded-xl bg-sky-500 text-slate-950 font-black text-xs">שלח</button>
+      </div>
+    </div>
+
+    <!-- לוג מהלכים מתרחב בתחתית המסך עם נקודת צבע -->
+    <div class="pointer-events-auto mx-auto max-w-2xl w-full bg-slate-950/92 border border-slate-800 rounded-2xl p-2.5 shadow-2xl space-y-2">
+      <div class="flex items-center justify-between gap-2">
+        <div id="hudLatestLog" class="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-200 truncate">
+          <span class="w-2.5 h-2.5 rounded-full bg-sky-400 shrink-0"></span>
+          <span>המערכת מוכנה. בחר יחידה כחולה על הלוח.</span>
+        </div>
+        <button id="btnToggleHudLog" class="shrink-0 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-400 px-3 py-1 rounded-xl text-xs font-bold">
+          📜 <span id="hudLogBtnLabel">הרחב</span>
+        </button>
+      </div>
+      <div id="hudExpandedLogs" class="hidden max-h-32 overflow-y-auto custom-scroll border-t border-slate-800 pt-2 space-y-1"></div>
+    </div>
+  </div>
+
+  <!-- 11. מודאל פרטי יחידה בלחיצה ארוכה בארסנל -->
+  <div id="arsenalInfoModal" class="screen-layer z-50 bg-slate-950/80 hidden">
+    <div class="glass-card max-w-sm w-full p-5 space-y-3 border-amber-400/50">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <span id="aiModalIcon" class="text-3xl">🚁</span>
+          <div>
+            <h3 id="aiModalTitle" class="text-lg font-black text-white">מסוק תובלה</h3>
+            <span id="aiModalRank" class="text-xs font-bold text-amber-400">דרגה 7</span>
+          </div>
+        </div>
+        <button id="btnCloseArsenalModal" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 font-black">×</button>
+      </div>
+      <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 space-y-1.5 text-xs text-slate-200">
+        <div><strong class="text-sky-400">טווח ותנועה:</strong> <span id="aiModalMove">עד 3 משבצות לכל כיוון</span></div>
+        <div><strong class="text-emerald-400">עבירות שטח:</strong> <span id="aiModalTerrain">טס מעל יבשה, ים וגשרים</span></div>
+        <div><strong class="text-amber-400">יכולת מיוחדת:</strong> <span id="aiModalAbility">מסוגל להעמיס ולהנחית יחידת חי"ר</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12. מודאל הכרעת תיקו -->
+  <div id="tieBreakerModal" class="screen-layer z-50 bg-slate-950/85 hidden">
+    <div class="glass-card max-w-sm w-full p-6 text-center space-y-4 border-amber-400/50">
+      <div class="text-4xl">⚖️</div>
+      <h3 class="text-xl font-black text-white">הכרעת עימות שווה כוחות!</h3>
+      <p id="tieBreakerDesc" class="text-xs text-slate-300">שתי היחידות באותה דרגה. כיצד תרצה להכריע?</p>
+      <div class="grid grid-cols-2 gap-2.5">
+        <button id="btnTieRetreat" class="py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-xs">🏳️ חדל / נסיגה</button>
+        <button id="btnTieDeath" class="py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs">⚔️ עד המוות (השמדה הדדית)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 13. מודאל הכרעת ברית -->
+  <div id="allianceModal" class="screen-layer z-50 bg-slate-950/85 hidden">
+    <div class="glass-card max-w-sm w-full p-6 text-center space-y-4 border-emerald-400/50">
+      <div class="text-4xl">🤝</div>
+      <h3 class="text-xl font-black text-white">כוחות האויב הובסו!</h3>
+      <p class="text-xs text-slate-300">נותרו רק בני הברית על הלוח. האם לסיים בניצחון משותף או להמשיך לקרב הכרעה ביניכם?</p>
+      <div class="grid grid-cols-2 gap-2.5">
+        <button id="btnAllianceShare" class="py-3 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs">🏆 ניצחון משותף</button>
+        <button id="btnAllianceSplit" class="py-3 rounded-xl bg-amber-500 text-slate-950 font-black text-xs">⚔️ המשך קרב בינינו</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- מודאל בחירת יחידה לפריקה מתוך כלי תובלה טעון -->
+  <div id="unloadSelectModal" class="screen-layer z-50 bg-slate-950/85 hidden">
+    <div class="glass-card max-w-sm w-full p-5 text-center space-y-3 border-teal-400/50">
+      <div class="text-3xl">🪂</div>
+      <h3 class="text-lg font-black text-white">בחר יחידה לפריקה מהתובלה</h3>
+      <p class="text-xs text-slate-300">ישנן 2 יחידות מועמסות. איזו יחידה תרצה לפרוק למשבצת שנבחרה?</p>
+      <div id="unloadSelectList" class="space-y-2"></div>
+      <button id="btnCancelUnloadSelect" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold">ביטול</button>
+    </div>
+  </div>
+
+  <!-- 14. מודאל סיום קרב -->
+  <div id="victoryModal" class="screen-layer z-50 bg-slate-950/90 hidden">
+    <div class="glass-card max-w-sm w-full p-7 text-center space-y-4">
+      <div id="victoryIcon" class="text-5xl">🏆</div>
+      <h2 id="victoryTitle" class="text-2xl font-black text-white">ניצחון!</h2>
+      <p id="victoryDesc" class="text-xs text-slate-300">כבשת את דגל האויב!</p>
+      <div class="flex gap-2.5 pt-2">
+        <button id="btnVictoryMenu" class="flex-1 py-3 rounded-xl bg-slate-800 text-white font-bold text-sm">🏠 תפריט</button>
+        <button id="btnVictoryNext" class="flex-1 py-3 rounded-xl bg-sky-500 text-slate-950 font-black text-sm">המשך ◀</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PIECE_DEFS = {
+      FLAG:   { name: 'דגל מפקדה', rank: 0,  icon: '🚩', movable: false, range: 0,  moveTxt: 'נייח (0)', terrainTxt: 'יבשה בלבד', desc: 'המטרה העליונה. הגן עליו בעורף!' },
+      TC:     { name: 'בסיס TC',   rank: 0,  icon: '🏛️', movable: false, range: 0,  moveTxt: 'נייח (0)', terrainTxt: 'יבשה בלבד', desc: 'מפקדת הפיקוד המרכזית שמגדירה את מעגל הפריסה.' },
+      BOMB:   { name: 'מוקש / פצצה', rank: 11, icon: '💣', movable: false, range: 0, moveTxt: 'נייח + פיצוץ מבוקר', terrainTxt: 'יבשה', desc: 'משמיד כל תוקף מלבד חבלן (3) ורחפן. ניתן לפוצץ יזום.' },
+      SPY:    { name: 'מרגל',      rank: 1,  icon: '🕵️', movable: true,  range: 1,  infantry: true, moveTxt: 'משבצת 1 לכל כיוון', terrainTxt: 'יבשה וגשרים', desc: 'מחסל את המרשל (10) כאשר המרגל תוקף ראשון! כובש דגל.' },
+      SCOUT:  { name: 'סייר מהיר', rank: 2,  icon: '🔭', movable: true,  range: 2,  infantry: true, moveTxt: 'עד 2 משבצות (תקיפה מ-1)', terrainTxt: 'יבשה וגשרים', desc: 'מדלג עד 2 משבצות בקו ישר. תוקף ממרחק 1 וכובש דגל.' },
+      MINER:  { name: 'חבלן',      rank: 3,  icon: '🛠️', movable: true,  range: 1,  infantry: true, moveTxt: 'משבצת 1 לכל כיוון', terrainTxt: 'יבשה וגשרים', desc: 'מנטרל מוקשים בבטחה וכובש דגל.' },
+      SERG:   { name: 'סמל',       rank: 4,  icon: '⚔️', movable: true,  range: 1,  infantry: true, moveTxt: 'משבצת 1 לכל כיוון', terrainTxt: 'יבשה וגשרים', desc: 'לוחם חי"ר מיומן לקרבות קו ראשון וכיבוש דגל.' },
+      LIEUT:  { name: 'סגן',       rank: 5,  icon: '🎖️', movable: true,  range: 1,  infantry: true, moveTxt: 'משבצת 1 לכל כיוון', terrainTxt: 'יבשה וגשרים', desc: 'קצין שדה המוביל הסתערויות וכובש דגל.' },
+      CAPT:   { name: 'סרן',       rank: 6,  icon: '🏅', movable: true,  range: 1,  infantry: true, moveTxt: 'משבצת 1 לכל כיוון', terrainTxt: 'יבשה וגשרים', desc: 'מפקד פלוגה חזק הכובש דגלים.' },
+      DRONE:  { name: 'רחפן תקיפה', rank: 5, icon: '🛸', movable: true,  range: 2,  air: true, transport: true, moveTxt: 'עד 2 משבצות (תקיפה מ-1)', terrainTxt: 'מעל ים ויבשה', desc: 'חולף מעל מכשולים, מפוצץ מוקשים ומעמיס יחידת חי"ר. אינו כובש דגל.' },
+      HELI:   { name: 'מסוק תובלה', rank: 7,  icon: '🚁', movable: true,  range: 3,  air: true, transport: true, moveTxt: 'עד 3 משבצות (תקיפה מ-1)', terrainTxt: 'מעל ים ויבשה', desc: 'מעמיס ומנחית חיילי חי"ר מעבר לקווים. אינו כובש דגל.' },
+      COL:    { name: 'אלוף משנה', rank: 8,  icon: '🦅', movable: true,  range: 1,  infantry: true, moveTxt: 'משבצת 1 לכל כיוון', terrainTxt: 'יבשה וגשרים', desc: 'מפקד חטיבה בכיר הכובש דגלים.' },
+      GEN:    { name: 'אלוף',      rank: 9,  icon: '⭐', movable: true,  range: 1,  infantry: true, moveTxt: 'משבצת 1 לכל כיוון', terrainTxt: 'יבשה וגשרים', desc: 'סגן מפקד הצבא הכובש דגלים.' },
+      MARSH:  { name: 'מרשל',      rank: 10, icon: '🌟', movable: true,  range: 1,  infantry: true, moveTxt: 'משבצת 1 לכל כיוון', terrainTxt: 'יבשה וגשרים', desc: 'הדרגה הגבוהה ביותר (10) — פגיע למרגל תוקף ומוקשים. כובש דגל.' },
+      BOAT:   { name: 'ספינת תובלה', rank: 6, icon: '🚢', movable: true, range: 3,  naval: true, transport: true, moveTxt: 'עד 3 משבצות בים (תקיפה מ-1)', terrainTxt: 'ים ומתחת לגשרים (⇅)', desc: 'שטה מתחת לגשרים, מעמיסה ופורקת חיילים לחוף. אינה כובשת דגל.' },
+      SENSOR: { name: 'סנסור מכ"ם', rank: 2, icon: '📡', movable: true,  range: 1,  moveTxt: 'משבצת 1 + סריקת רדיוס', terrainTxt: 'יבשה וגשרים', desc: 'מפעיל מכ"ם שחושף אויבים ברדיוס 2 משבצות. אינו כובש דגל.' },
+      PLANE:  { name: 'מטוס ביון', rank: 8,  icon: '✈️', movable: true,  range: 15, air: true, transport: true, moveTxt: 'טיסה ארוכה (תקיפה מ-1)', terrainTxt: 'אווירי מעל כל הלוח', desc: 'חוצה את המפה בטיסה מהירה, סורק אויבים ומעמיס יחידת חי"ר. אינו כובש דגל.' }
+    };
+
+    const FULL_ROSTER = ['FLAG', 'MARSH', 'GEN', 'COL', 'HELI', 'PLANE', 'CAPT', 'CAPT', 'LIEUT', 'LIEUT', 'DRONE', 'SERG', 'SERG', 'MINER', 'MINER', 'SCOUT', 'SCOUT', 'SENSOR', 'SPY', 'BOAT', 'BOMB', 'BOMB', 'BOMB'];
+
+    const BOARD_THEMES = {
+      forest: { land1: '#1d3b2e', land2: '#162f24', sea: '#0d2847', bridge: '#854d0e' },
+      desert: { land1: '#6b4c2a', land2: '#593e21', sea: '#164e63', bridge: '#78350f' },
+      arctic: { land1: '#334155', land2: '#1e293b', sea: '#0c4a6e', bridge: '#92400e' },
+      night:  { land1: '#111827', land2: '#0b1120', sea: '#081a33', bridge: '#713f12' }
+    };
+
+    const TUTORIAL_STEPS = [
+      {
+        title: 'מבנה הלוח וקואורדינטות שחמט',
+        desc: 'הלוח מוקף בסרגל קואורדינטות (A–J ו-1–12) למעקב מדויק. גרור באצבע להזזה חופשית או צבוט לשינוי זום.',
+        demo: null
+      },
+      {
+        title: 'המטרה: כיבוש דגל האויב (🚩)',
+        desc: 'דגל האויב מוסתר בעורף הצפוני ואינו יכול לזוז. כבוש אותו עם יחידת חי"ר יבשתית בלבד כדי לנצח!',
+        demo: { fromR: 8, fromC: 4, toR: 7, toC: 4, layer: 'land', team: 'blue', pieceType: 'SERG' }
+      },
+      {
+        title: 'ערפל מלחמה ומהלך יריב (?)',
+        desc: 'כלי היריב חסויים תחת (?). ראה כעת הדגמה של מהלך יריב מסתורי עם שובל אדום שמסמן מאין ולאן נע.',
+        demo: { fromR: 2, fromC: 5, toR: 3, toC: 5, layer: 'land', team: 'red', pieceType: 'SCOUT' }
+      },
+      {
+        title: 'בחירת כלי וכרטיסיית מידע הניתנת לגרירה',
+        desc: 'לחץ על כל כלי כחול על הלוח: תיפתח כרטיסיית מידע שניתן גם לגרור לכל מקום על המסך או למזער לתחתית.',
+        demo: null
+      },
+      {
+        title: 'תנועת חי"ר רגילה (משבצת 1)',
+        desc: 'רוב היחידות (מרשל, אלוף, אל"ם, סרן, סגן, סמל) נעות משבצת אחת אופקית או אנכית בלבד.',
+        demo: { fromR: 8, fromC: 2, toR: 7, toC: 2, layer: 'land', team: 'blue', pieceType: 'SERG' }
+      },
+      {
+        title: 'תנועת סייר מהיר (🔭 דרגה 2)',
+        desc: 'הסייר יכול לדלג עד 2 משבצות בקו ישר (אופקי או אנכי) בשטח פנוי — תקיפה מותרת ממרחק 1 בלבד.',
+        demo: { fromR: 9, fromC: 6, toR: 7, toC: 6, layer: 'land', team: 'blue', pieceType: 'SCOUT' }
+      },
+      {
+        title: 'המרגל (🕵️ דרגה 1) מול המרשל (🌟 10)',
+        desc: 'המרגל אמנם בדרגה 1, אך כשהוא תוקף ראשון את המרשל (10) — המרגל מחסל אותו! אם המרשל תוקף ראשון, המרגל מפסיד.',
+        demo: { fromR: 8, fromC: 8, toR: 7, toC: 8, layer: 'land', team: 'blue', pieceType: 'SPY' }
+      },
+      {
+        title: 'מוקשים (💣) ונטרול ע"י חבלן (🛠️ 3)',
+        desc: 'מוקש משמיד כל יחידה שתוקפת אותו, מלבד החבלן (דרגה 3) שמנטרל את המוקש בבטחה וכובש את המשבצת.',
+        demo: { fromR: 10, fromC: 4, toR: 9, toC: 4, layer: 'land', team: 'blue', pieceType: 'MINER' }
+      },
+      {
+        title: 'גשרים דו-מפלסיים — מעבר יבשתי מעל הגשר',
+        desc: 'כלי יבשה חוצים נהרות אך ורק דרך גשרים. ראה כעת יחידת חי"ר עולה על הגשר במרכז הלוח.',
+        demo: { fromR: 7, fromC: 2, toR: 6, toC: 2, layer: 'land', team: 'blue', pieceType: 'CAPT' }
+      },
+      {
+        title: 'שיט ימי מתחת לגשרים וסימון (⇅)',
+        desc: 'ספינה (🚢) שטה בים ועוברת מתחת לגשר! כשיש כלי מעל וכלי מתחת מופיע חץ (⇅), ורק הספינה יכולה לתקוף מלמטה.',
+        demo: { fromR: 6, fromC: 0, toR: 6, toC: 2, layer: 'naval', team: 'blue', pieceType: 'BOAT' }
+      },
+      {
+        title: 'העמסת יחידת יבשה על ספינת תובלה (📦)',
+        desc: 'לחץ בכרטיסיית הכלי על "📦 העמס יחידה" ואז בחר ביחידה הסמוכה להעמסה לתובלה (עד 2 יחידות)!',
+        demo: { fromR: 7, fromC: 4, toR: 6, toC: 4, layer: 'land', team: 'blue', pieceType: 'LIEUT' }
+      },
+      {
+        title: 'הפלגה עם מטען ופריקה בחוף האויב (🪂)',
+        desc: 'לאחר שספינה טעונה מפליגה לגדת האויב, בחר בה ולחץ בכרטיסייה על "🪂 פרוק יחידה" ובחר משבצת יבשה סמוכה!',
+        demo: { fromR: 6, fromC: 4, toR: 5, toC: 4, layer: 'naval', team: 'blue', pieceType: 'BOAT' }
+      },
+      {
+        title: 'מסוק תובלה (🚁 דרגה 7) — טיסה והנחתה',
+        desc: 'המסוק טס עד 3 משבצות מעל ים ויבשה, מעמיס יחידות יבשה ומנחית אותן מעבר לקווי ההגנה.',
+        demo: { fromR: 9, fromC: 3, toR: 6, toC: 3, layer: 'land', team: 'blue', pieceType: 'HELI' }
+      },
+      {
+        title: 'רחפן תקיפה (🛸 דרגה 5)',
+        desc: 'הרחפן טס עד 2 משבצות מעל כל שטח, מפוצץ מוקשי אויב ומעמיס יחידת חי"ר.',
+        demo: { fromR: 9, fromC: 5, toR: 7, toC: 5, layer: 'land', team: 'blue', pieceType: 'DRONE' }
+      },
+      {
+        title: 'מטוס ביון (✈️ טווח 15)',
+        desc: 'מטוס הביון חוצה את המפה בטיסה ארוכה ומבצע סריקת מכ"ם סביבתית לחשיפת כלי אויב.',
+        demo: { fromR: 11, fromC: 8, toR: 4, toC: 8, layer: 'land', team: 'blue', pieceType: 'PLANE' }
+      },
+      {
+        title: 'סנסור מכ"ם (📡) — סריקה ללא קרב',
+        desc: 'בחר בסנסור ולחץ בכרטיסייה על "📡 הפעל סריקת מכ"ם" כדי לחשוף כל אויב מוסתר ברדיוס 2 משבצות.',
+        demo: { fromR: 10, fromC: 7, toR: 9, toC: 7, layer: 'land', team: 'blue', pieceType: 'SENSOR' }
+      },
+      {
+        title: 'פיצוץ מבוקר של פצצה/מוקש (💣)',
+        desc: 'ניתן לבחור מוקש שלך ולהפעיל "💣 פיצוץ מבוקר" שמשמיד אויבים בכל 4 המשבצות הסמוכות.',
+        demo: { fromR: 11, fromC: 4, toR: 11, toC: 4, layer: 'land', team: 'blue', pieceType: 'BOMB' }
+      },
+      {
+        title: 'הטעיה טקטית וערפל 50% (👁️ / ❓)',
+        desc: 'בכרטיסיית הכלי תוכל לחשוף כלי להטעיה, או להעמיס כלי חשוף יחד עם כלי נוסף כדי להחזירו לערפל 50%!',
+        demo: null
+      },
+      {
+        title: 'הכרעת תיקו בעימות חזיתי (⚔️ / 🏳️)',
+        desc: 'כששתי יחידות שוות דרגה מתנגשות, נפתח חלון הכרעה: "🏳️ חדל/נסיגה" או "⚔️ עד המוות" להשמדה הדדית.',
+        demo: { fromR: 7, fromC: 6, toR: 6, toC: 6, layer: 'land', team: 'blue', pieceType: 'COL' }
+      },
+      {
+        title: 'הקמת מפקדת TC ומעגל פריסה',
+        desc: 'בתחילת קרב מותאם או אונליין, מציבים את ה-TC ביבשה ופורסים את הצבא בתוך מעגל הפיקוד (קוטר TC מתכוונן).',
+        demo: null
+      },
+      {
+        title: 'החזרת כלי מהלוח או איפוס הצבה מלא',
+        desc: 'בזמן ההצבה תוכל ללחוץ על כל כלי שהצבת כדי להחזירו לארסנל, או ללחוץ "🔄 אפס הכל" לאיפוס מלא.',
+        demo: null
+      },
+      {
+        title: 'יומן המלחמה המתרחב ונקודות הצבע',
+        desc: 'בתחתית המסך מוצגת הפעולה האחרונה עם נקודה כחולה (שלך) או אדומה (היריב). לחץ "📜 הרחב" לצפייה בכל ההיסטוריה.',
+        demo: null
+      },
+      {
+        title: 'מערכת הבריתות (2 נגד 2) והכרעת ברית',
+        desc: 'במצב ברית, בני הברית רואים זה את כליו של זה. לאחר הבסת האויב בוחרים בין ניצחון משותף להמשך קרב הכרעה.',
+        demo: null
+      },
+      {
+        title: 'אונליין VS, עורך מפות וצ׳אט חי',
+        desc: 'בלובי האונליין או בחדר הפיקוד תוכל לצייר מפות מותאמות ב-2 אצבעות, לשמור חדרים ולשוחח בצ׳אט החי.',
+        demo: null
+      },
+      {
+        title: 'סיום ההדרכה המעשית — מוכן לקרב!',
+        desc: 'סיימת את כל 25 שלבי ההדרכה המעשית! תוכל להמשיך להתאמן כאן או ללחוץ "המשך ◀" לחזרה לתפריט הראשי.',
+        demo: null
+      }
+    ];
+
+    function seededHash(r, c) {
+      const x = Math.sin(r * 127.1 + c * 311.7) * 43758.5453123;
+      return x - Math.floor(x);
+    }
+
+    function easeInOutCubic(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    class AttacktikApp {
+      constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.nickname = localStorage.getItem('attacktik_nick') || '';
+        this.unlockedCampaign = parseInt(localStorage.getItem('attacktik_camp') || '1', 10);
+        this.savedRooms = JSON.parse(localStorage.getItem('attacktik_saved_rooms') || '[]');
+        this.activeRooms = [];
+        this.currentRoomId = null;
+        this.peer = null;
+        this.peerConn = null;
+        this.myPeerId = '';
+        this.roomChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('attacktik_online_v1') : null;
+
+        this.phase = 'splash';
+        this.isCampaign = false;
+        this.campaignLevel = 1;
+        this.allianceMode = false;
+
+        this.rows = 12;
+        this.cols = 10;
+        this.tcRadius = 3;
+        this.terrain = [];
+        this.landGrid = [];
+        this.navalGrid = [];
+        this.blueTC = null;
+        this.deployQueue = [];
+        this.selectedDeployIdx = 0;
+        this.initialRosterSnapshot = [];
+        this.currentRng = Math.random;
+        this.selected = null;
+        this.validMoves = [];
+        this.unitCardMinimized = false;
+        this.selectedUnloadIdx = null;
+        this.pendingUnload = null;
+
+        this.lastMoveTrails = { blue: null, red: null };
+        this.animMove = null;
+        this.fxEffects = [];
+
+        this.currentTurn = 'blue';
+        this.isAiBusy = false;
+        this.isGameOver = false;
+        this.turnTimeLimit = 60;
+        this.turnRemaining = 60;
+        this.useTurnTimer = true;
+        this.timerHandle = null;
+        this.aiHandle = null;
+        this.aiWatchdog = null;
+        this.pendingTie = null;
+        this.aiDifficulty = 'medium';
+
+        this.cam = { x: 0, y: 0, zoom: 1 };
+        this.gesture = { active: false, moved: false, startX: 0, startY: 0, camX: 0, camY: 0, pinchDist: 0, pinchZoom: 1, isPinching: false };
+        this.screensaverTimer = null;
+        this.screensaverWorld = null;
+        this.screensaverNextMap = 0;
+        this.lastFrameTime = performance.now();
+        this.customTerrainOverride = null;
+        this.painterTarget = 'room';
+        this.tutIndex = 0;
+        this.audioCtx = null;
+
+        this.roomState = {
+          name: 'חדר פיקוד',
+          pass: '',
+          isAdmin: true,
+          preset: 'classic_bridges',
+          rows: 12,
+          cols: 10,
+          customTerrain: this.buildTerrain(12, 10, 'classic_bridges'),
+          players: [{ name: this.nickname || 'מפקד', admin: true, ready: true }],
+          chat: []
+        };
+        this.painter = { grid: [], brush: 0, size: 1, zoom: 1, panX: 0, panY: 0 };
+
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
+        this.bindEvents();
+        this.startSplashSequence();
+        setTimeout(() => this.loadPeerJsAsync(), 1400);
+        requestAnimationFrame((t) => this.renderLoop(t));
+      }
+
+      onClick(id, fn) {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', fn);
+      }
+
+      resizeCanvas() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+      }
+
+      playTone(freq = 440, dur = 0.08) {
+        if (!document.getElementById('optSound')?.checked) return;
+        try {
+          if (!this.audioCtx) {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (Ctx) this.audioCtx = new Ctx();
+          }
+          if (!this.audioCtx) return;
+          if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.06, this.audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + dur);
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+          osc.start();
+          osc.stop(this.audioCtx.currentTime + dur);
+        } catch (e) {}
+      }
+
+      vibrate(isPlayer, ms = 20) {
+        const optId = isPlayer ? 'optVibPlayer' : 'optVibEnemy';
+        if (document.getElementById(optId)?.checked && navigator.vibrate) {
+          try { navigator.vibrate(ms); } catch (e) {}
+        }
+      }
+
+      loadPeerJsAsync() {
+        if (this.roomChannel) {
+          this.roomChannel.onmessage = (ev) => {
+            const msg = ev.data;
+            if (!msg || !msg.type) return;
+            if (msg.type === 'ROOM_ANNOUNCE' && msg.room) {
+              const idx = this.activeRooms.findIndex(r => r.id === msg.room.id);
+              if (idx >= 0) this.activeRooms[idx] = msg.room;
+              else this.activeRooms.push(msg.room);
+              if (!document.getElementById('onlineLobbyScreen').classList.contains('hidden')) {
+                this.renderLobbyLists();
+              }
+            } else if (msg.type === 'ROOM_CLOSE' && msg.roomId) {
+              this.activeRooms = this.activeRooms.filter(r => r.id !== msg.roomId);
+              if (!document.getElementById('onlineLobbyScreen').classList.contains('hidden')) {
+                this.renderLobbyLists();
+              }
+            }
+          };
+        }
+        try {
+          const s = document.createElement('script');
+          s.src = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
+          s.async = true;
+          s.onload = () => this.initPeerConnection();
+          s.onerror = () => {};
+          document.head.appendChild(s);
+        } catch (e) {}
+      }
+
+      initPeerConnection() {
+        try {
+          if (typeof Peer === 'undefined') return;
+          const shortId = 'ATK-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+          this.peer = new Peer(shortId);
+          this.peer.on('open', (id) => {
+            this.myPeerId = id;
+            const codeEl = document.getElementById('roomOnlineCode');
+            if (codeEl && this.roomState.isAdmin) codeEl.textContent = id;
+          });
+          this.peer.on('connection', (conn) => {
+            this.peerConn = conn;
+            this.setupPeerConnection(conn);
+          });
+        } catch (e) {}
+      }
+
+      setupPeerConnection(conn) {
+        conn.on('open', () => {
+          this.roomState.chat.push({ sender: 'מערכת', text: '🌐 שחקן אונליין התחבר לחדר בזמן אמת!' });
+          if (this.roomState.players.length < 2) {
+            this.roomState.players.push({ name: 'מפקד_רשת', admin: false, ready: true });
+            this.renderRoomPlayers();
+          }
+          this.renderRoomChat();
+          if (this.roomState.isAdmin) {
+            conn.send({ type: 'SYNC_ROOM', state: this.roomState });
+          }
+        });
+        conn.on('data', (data) => {
+          if (!data || !data.type) return;
+          if (data.type === 'SYNC_ROOM' && data.state) {
+            this.roomState.customTerrain = data.state.customTerrain;
+            this.roomState.rows = data.state.rows;
+            this.roomState.cols = data.state.cols;
+            this.renderRoomPreview();
+          } else if (data.type === 'CHAT' && data.msg) {
+            this.roomState.chat.push(data.msg);
+            this.renderRoomChat();
+          } else if (data.type === 'MOVE' && data.payload && this.phase === 'battle') {
+            const { fromR, fromC, fromLayer, move } = data.payload;
+            this.performMove(fromR, fromC, fromLayer, move);
+          }
+        });
+      }
+
+      connectToOnlineCode(code) {
+        const cleanCode = (code || '').trim();
+        if (!cleanCode) return;
+        this.enterOnlineRoom(`חדר רשת (${cleanCode})`, '', false);
+        const codeEl = document.getElementById('roomOnlineCode');
+        if (codeEl) codeEl.textContent = cleanCode;
+        if (this.peer) {
+          try {
+            const conn = this.peer.connect(cleanCode);
+            this.peerConn = conn;
+            this.setupPeerConnection(conn);
+          } catch (e) {}
+        }
+      }
+
+      formatCoord(r, c) {
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const colStr = c < 26 ? letters[c] : `A${letters[c - 26] || c}`;
+        return `${colStr}${this.rows - r}`;
+      }
+
+      hideAllOverlays() {
+        [
+          'splashScreen', 'nicknameModal', 'mainMenu', 'campaignScreen',
+          'customScreen', 'settingsScreen', 'onlineLobbyScreen',
+          'onlineRoomScreen', 'painterModal', 'battleHud',
+          'arsenalInfoModal', 'tieBreakerModal', 'allianceModal',
+          'unloadSelectModal', 'victoryModal'
+        ].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add('hidden');
+        });
+      }
+
+      makeDraggableCard(cardId, handleId) {
+        const card = document.getElementById(cardId);
+        const handle = document.getElementById(handleId);
+        if (!card || !handle) return;
+        let dragging = false;
+        let startX = 0, startY = 0, origLeft = 0, origTop = 0;
+
+        handle.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+          dragging = true;
+          const rect = card.getBoundingClientRect();
+          card.style.left = rect.left + 'px';
+          card.style.top = rect.top + 'px';
+          card.style.bottom = 'auto';
+          card.style.transform = 'none';
+          startX = e.clientX;
+          startY = e.clientY;
+          origLeft = rect.left;
+          origTop = rect.top;
+          handle.setPointerCapture(e.pointerId);
+        });
+
+        handle.addEventListener('pointermove', (e) => {
+          if (!dragging) return;
+          const maxLeft = Math.max(8, window.innerWidth - card.offsetWidth - 8);
+          const maxTop = Math.max(8, window.innerHeight - card.offsetHeight - 8);
+          const nextLeft = Math.min(maxLeft, Math.max(8, origLeft + (e.clientX - startX)));
+          const nextTop = Math.min(maxTop, Math.max(8, origTop + (e.clientY - startY)));
+          card.style.left = nextLeft + 'px';
+          card.style.top = nextTop + 'px';
+        });
+
+        const stopDrag = () => { dragging = false; };
+        handle.addEventListener('pointerup', stopDrag);
+        handle.addEventListener('pointercancel', stopDrag);
+      }
+
+      /* ================= 1. טעינה, הגנת מגע ושומר מסך ================= */
+      startSplashSequence() {
+        let pct = 0;
+        const bar = document.getElementById('splashBar');
+        const txt = document.getElementById('splashPercent');
+        const prompt = document.getElementById('splashTapPrompt');
+
+        const iv = setInterval(() => {
+          pct += 5;
+          if (pct >= 100) {
+            pct = 100;
+            clearInterval(iv);
+            if (prompt) prompt.classList.remove('hidden');
+          }
+          if (bar) bar.style.width = `${pct}%`;
+          if (txt) txt.textContent = `${pct}%`;
+        }, 45);
+      }
+
+      handleSplashTap() {
+        if (document.getElementById('splashTapPrompt').classList.contains('hidden')) return;
+        this.playTone(580, 0.1);
+        document.getElementById('splashScreen').classList.add('hidden');
+        if (!this.nickname) {
+          document.getElementById('nicknameModal').classList.remove('hidden');
+        } else {
+          this.openMainMenuWithGuard();
+        }
+      }
+
+      openMainMenuWithGuard() {
+        this.clearTimers();
+        this.phase = 'menu';
+        this.hideAllOverlays();
+        const menu = document.getElementById('mainMenu');
+        const card = document.getElementById('mainMenuCard');
+        document.getElementById('displayNickname').textContent = this.nickname || 'מפקד טקטי';
+
+        const hasAutoSave = Boolean(localStorage.getItem('attacktik_autosave'));
+        document.getElementById('btnResumeAutoSave').classList.toggle('hidden', !hasAutoSave);
+
+        menu.classList.remove('hidden');
+        card.classList.remove('menu-screensaver');
+        card.style.pointerEvents = 'none';
+        setTimeout(() => { card.style.pointerEvents = 'auto'; }, 460);
+
+        this.resetScreensaverTimer();
+      }
+
+      resetScreensaverTimer() {
+        const card = document.getElementById('mainMenuCard');
+        card.classList.remove('menu-screensaver');
+        if (this.screensaverTimer) clearTimeout(this.screensaverTimer);
+        this.screensaverTimer = setTimeout(() => {
+          if (this.phase === 'menu' && !document.getElementById('mainMenu').classList.contains('hidden')) {
+            card.classList.add('menu-screensaver');
+          }
+        }, 10000);
+      }
+
+      saveAutoState() {
+        if (this.phase !== 'battle' || this.isGameOver) return;
+        try {
+          const payload = {
+            rows: this.rows,
+            cols: this.cols,
+            terrain: this.terrain,
+            landGrid: this.landGrid,
+            navalGrid: this.navalGrid,
+            isCampaign: this.isCampaign,
+            campaignLevel: this.campaignLevel,
+            currentTurn: this.currentTurn
+          };
+          localStorage.setItem('attacktik_autosave', JSON.stringify(payload));
+        } catch (e) {}
+      }
+
+      resumeAutoSave() {
+        try {
+          const raw = localStorage.getItem('attacktik_autosave');
+          if (!raw) return;
+          const data = JSON.parse(raw);
+          this.hideAllOverlays();
+          this.phase = 'battle';
+          this.rows = data.rows;
+          this.cols = data.cols;
+          this.terrain = data.terrain;
+          this.landGrid = data.landGrid;
+          this.navalGrid = data.navalGrid;
+          this.isCampaign = Boolean(data.isCampaign);
+          this.campaignLevel = data.campaignLevel || 1;
+          this.currentTurn = 'blue';
+          this.isAiBusy = false;
+          this.isGameOver = false;
+          this.selected = null;
+          this.validMoves = [];
+          this.lastMoveTrails = { blue: null, red: null };
+          this.resetCamera();
+          document.getElementById('battleHud').classList.remove('hidden');
+          document.getElementById('deployPanel').classList.add('hidden');
+          document.getElementById('tutorialBanner').classList.add('hidden');
+          this.updateTurnHud();
+          this.logAction('blue', '💾 הקרב השמור נטען בהצלחה! תורך.');
+        } catch (e) {}
+      }
+
+      /* ================= 2. בניית מפות ותרחישים ================= */
+      createSeededRng(seedVal) {
+        let s = (seedVal * 9301 + 49297) % 233280;
+        return () => {
+          s = (s * 9301 + 49297) % 233280;
+          return s / 233280;
+        };
+      }
+
+      buildTerrain(rows, cols, preset, rngFn = Math.random) {
+        const grid = Array.from({ length: rows }, () => Array(cols).fill(0));
+        const midR = Math.floor(rows / 2);
+        const midC = Math.floor(cols / 2);
+
+        if (preset === 'classic_bridges' || preset === 'twin_bridges') {
+          for (let c = 0; c < cols; c++) {
+            grid[midR - 1][c] = 1;
+            grid[midR][c] = 1;
+          }
+          const b1 = Math.max(1, Math.floor(cols * 0.25));
+          const b2 = Math.min(cols - 2, Math.floor(cols * 0.75));
+          grid[midR - 1][b1] = 3; grid[midR][b1] = 3;
+          grid[midR - 1][b2] = 3; grid[midR][b2] = 3;
+        } else if (preset === 'cross_bridges') {
+          for (let c = 0; c < cols; c++) grid[midR][c] = 1;
+          for (let r = 0; r < rows; r++) grid[r][midC] = 1;
+          grid[midR][Math.max(1, midC - 2)] = 3;
+          grid[midR][Math.min(cols - 2, midC + 2)] = 3;
+          grid[Math.max(1, midR - 2)][midC] = 2;
+          grid[Math.min(rows - 2, midR + 2)][midC] = 2;
+        } else if (preset === 'river_delta') {
+          for (let c = 0; c < cols; c++) {
+            const offset = Math.round(Math.sin(c * 0.8));
+            const rr = Math.min(rows - 3, Math.max(2, midR + offset));
+            grid[rr][c] = 1;
+          }
+          grid[midR][Math.floor(cols / 2)] = 3;
+        } else if (preset === 'coral_maze' || preset === 'archipelago') {
+          for (let r = 2; r < rows - 2; r++) {
+            for (let c = 1; c < cols - 1; c++) {
+              if ((r + c) % 3 === 0) grid[r][c] = 1;
+            }
+          }
+          grid[midR][midC] = 2;
+          grid[midR - 1][midC] = 3;
+        } else if (preset === 'peninsula_fort') {
+          for (let r = 2; r < rows - 2; r++) {
+            grid[r][0] = 1;
+            grid[r][cols - 1] = 1;
+          }
+          for (let c = 0; c < cols; c++) grid[midR][c] = 1;
+          grid[midR][midC] = 3;
+        } else if (preset === 'four_corners') {
+          for (let c = 0; c < cols; c++) grid[midR][c] = 1;
+          for (let r = 0; r < rows; r++) grid[r][midC] = 1;
+          grid[midR][2] = 3;
+          grid[midR][cols - 3] = 3;
+          grid[2][midC] = 2;
+          grid[rows - 3][midC] = 2;
+        } else if (preset === 'canyon_pass') {
+          for (let r = 3; r < rows - 3; r++) {
+            for (let c = 0; c < cols; c++) {
+              if (c !== 2 && c !== cols - 3) grid[r][c] = 1;
+            }
+          }
+          grid[midR][midC] = 2;
+        } else {
+          for (let r = 2; r < rows - 2; r++) {
+            for (let c = 0; c < cols; c++) {
+              if (rngFn() < 0.28) grid[r][c] = 1;
+            }
+          }
+          grid[midR][midC] = 2;
+        }
+        return grid;
+      }
+
+      setupBoardData(rows, cols, preset, customGrid = null, rngFn = Math.random) {
+        this.rows = rows;
+        this.cols = cols;
+        this.currentRng = rngFn;
+        this.terrain = customGrid ? customGrid.map(r => [...r]) : this.buildTerrain(rows, cols, preset, rngFn);
+        this.landGrid = Array.from({ length: rows }, () => Array(cols).fill(null));
+        this.navalGrid = Array.from({ length: rows }, () => Array(cols).fill(null));
+        this.selected = null;
+        this.validMoves = [];
+        this.unitCardMinimized = false;
+        this.selectedUnloadIdx = null;
+        this.pendingUnload = null;
+        this.lastMoveTrails = { blue: null, red: null };
+        this.animMove = null;
+        this.fxEffects = [];
+        this.isGameOver = false;
+        this.resetCamera();
+      }
+
+      makePiece(type, team, revealed = false) {
+        const def = PIECE_DEFS[type];
+        return {
+          type,
+          team,
+          name: def.name,
+          rank: def.rank,
+          icon: def.icon,
+          movable: def.movable,
+          range: def.range,
+          air: Boolean(def.air),
+          naval: Boolean(def.naval),
+          infantry: Boolean(def.infantry),
+          transport: Boolean(def.transport),
+          revealed,
+          fiftyPercentInfo: null,
+          cargo: []
+        };
+      }
+
+      /* ================= 3. לובי אונליין, חדר המתנה וצייר מפות ================= */
+      openOnlineLobby() {
+        this.hideAllOverlays();
+        document.getElementById('onlineLobbyScreen').classList.remove('hidden');
+        this.renderLobbyLists();
+      }
+
+      renderLobbyLists() {
+        const actEl = document.getElementById('activeRoomsList');
+        if (this.activeRooms.length === 0) {
+          actEl.innerHTML = `<div class="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 text-xs text-slate-400 text-center">אין חדרים פתוחים כעת. צור חדר חדש למעלה.</div>`;
+        } else {
+          actEl.innerHTML = this.activeRooms.map(r => `
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
+              <div>
+                <div class="font-bold text-xs text-white">${r.pass ? '🔒' : '🟢'} ${r.name}</div>
+                <div class="text-[11px] text-slate-400">אדמין: ${r.host} • ${r.playersCount || 1}/2</div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button data-rid="${r.id}" class="join-room-btn px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 font-black text-xs">היכנס</button>
+                <button data-rid="${r.id}" class="delete-active-room-btn px-2 py-1.5 rounded-lg bg-rose-600/80 hover:bg-rose-500 text-white font-bold text-xs" title="סגור והסר חדר">🗑️</button>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        actEl.querySelectorAll('.join-room-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const room = this.activeRooms.find(x => x.id === btn.dataset.rid);
+            if (!room) return;
+            this.currentRoomId = room.id;
+            this.enterOnlineRoom(room.name, room.pass, room.isAdmin !== false);
+          });
+        });
+
+        actEl.querySelectorAll('.delete-active-room-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const rid = btn.dataset.rid;
+            this.activeRooms = this.activeRooms.filter(x => x.id !== rid);
+            if (this.currentRoomId === rid) this.currentRoomId = null;
+            this.renderLobbyLists();
+          });
+        });
+
+        const savEl = document.getElementById('savedRoomsList');
+        if (this.savedRooms.length === 0) {
+          savEl.innerHTML = `<div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-500">עדיין לא נשמרו חדרים מותאמים.</div>`;
+        } else {
+          savEl.innerHTML = this.savedRooms.map((sr, idx) => `
+            <div class="p-3 rounded-xl bg-slate-900 border border-amber-500/30 flex items-center justify-between gap-2">
+              <div>
+                <div class="font-bold text-xs text-amber-300">⭐ ${sr.name}</div>
+                <div class="text-[11px] text-slate-400">לוח ${sr.rows || 12}×${sr.cols || 10} • TC: ${sr.tcRadius}</div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button data-sidx="${idx}" class="load-saved-room-btn px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-xs">פתח חדר</button>
+                <button data-sidx="${idx}" class="delete-saved-room-btn px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-600/80 text-slate-300 hover:text-white font-bold text-xs">🗑️</button>
+              </div>
+            </div>
+          `).join('');
+          savEl.querySelectorAll('.load-saved-room-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const sr = this.savedRooms[Number(btn.dataset.sidx)];
+              const newId = 'room_' + Date.now();
+              this.currentRoomId = newId;
+              this.activeRooms.push({ id: newId, name: sr.name, host: this.nickname, pass: '', isAdmin: true, playersCount: 1 });
+              this.enterOnlineRoom(sr.name, '', true, sr);
+            });
+          });
+          savEl.querySelectorAll('.delete-saved-room-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              this.savedRooms.splice(Number(btn.dataset.sidx), 1);
+              localStorage.setItem('attacktik_saved_rooms', JSON.stringify(this.savedRooms));
+              this.renderLobbyLists();
+            });
+          });
+        }
+      }
+
+      enterOnlineRoom(name, pass, isAdmin, savedPreset = null) {
+        this.hideAllOverlays();
+        document.getElementById('onlineRoomScreen').classList.remove('hidden');
+
+        const initRows = savedPreset ? (savedPreset.rows || savedPreset.customTerrain.length) : 12;
+        const initCols = savedPreset ? (savedPreset.cols || savedPreset.customTerrain[0].length) : 10;
+
+        this.roomState = {
+          name,
+          pass,
+          isAdmin,
+          preset: savedPreset ? savedPreset.preset : 'classic_bridges',
+          rows: initRows,
+          cols: initCols,
+          customTerrain: savedPreset ? savedPreset.customTerrain.map(r => [...r]) : this.buildTerrain(initRows, initCols, 'classic_bridges'),
+          players: isAdmin
+            ? [{ name: this.nickname, admin: true, ready: true }]
+            : [{ name: this.nickname, admin: false, ready: false }, { name: 'אדמין_חדר', admin: true, ready: true }],
+          chat: [{ sender: 'מערכת', text: `ברוכים הבאים לחדר "${name}".` }]
+        };
+
+        document.getElementById('roomRows').value = initRows;
+        document.getElementById('roomCols').value = initCols;
+        document.getElementById('roomTitleDisplay').textContent = name;
+        document.getElementById('roomPassBadge').textContent = pass ? `🔒 סיסמה: ${pass}` : '🟢 חדר פתוח';
+        const codeEl = document.getElementById('roomOnlineCode');
+        if (codeEl) codeEl.textContent = this.myPeerId || this.currentRoomId || 'LOCAL-VS';
+
+        const adminControls = ['roomMapPreset', 'btnRandomMapRoom', 'btnLoadSavedIntoRoom', 'roomTcRadius', 'roomArsenal', 'roomTurnTime', 'roomRows', 'roomCols', 'btnOpenMapPainter', 'btnStartOnlineBattle', 'btnSaveRoomPreset'];
+        adminControls.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.disabled = !isAdmin;
+        });
+
+        document.getElementById('btnToggleReady').classList.toggle('hidden', isAdmin);
+        document.getElementById('btnStartOnlineBattle').classList.toggle('hidden', !isAdmin);
+
+        this.renderRoomPlayers();
+        this.renderRoomChat();
+        this.renderRoomPreview();
+      }
+
+      renderRoomPlayers() {
+        const el = document.getElementById('roomPlayersList');
+        el.innerHTML = this.roomState.players.map(p => `
+          <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-950/90 border border-slate-800 text-xs">
+            <span class="font-bold text-white">${p.admin ? '👑' : '🎖️'} ${p.name}</span>
+            <span class="${p.ready ? 'text-emerald-400 font-black' : 'text-amber-400 font-bold'}">${p.ready ? '✅ מוכן לקרב' : '⏳ לא מוכן'}</span>
+          </div>
+        `).join('');
+      }
+
+      renderRoomChat() {
+        const box = document.getElementById('roomChatMessages');
+        box.innerHTML = this.roomState.chat.map(m => `<div><span class="font-black text-sky-400">${m.sender}:</span> <span class="text-slate-200">${m.text}</span></div>`).join('');
+        box.scrollTop = box.scrollHeight;
+      }
+
+      renderRoomPreview() {
+        const c = document.getElementById('roomPreviewCanvas');
+        const ctx = c.getContext('2d');
+        c.width = c.clientWidth || 300;
+        c.height = c.clientHeight || 144;
+        const grid = this.roomState.customTerrain;
+        const rows = grid.length;
+        const cols = grid[0].length;
+        const tw = c.width / cols;
+        const th = c.height / rows;
+        for (let r = 0; r < rows; r++) {
+          for (let col = 0; col < cols; col++) {
+            const v = grid[r][col];
+            ctx.fillStyle = v === 1 ? '#0f294a' : (v === 2 || v === 3 ? '#b45309' : '#1e3a2f');
+            ctx.fillRect(col * tw, r * th, tw - 0.5, th - 0.5);
+          }
+        }
+      }
+
+      /* ================= 4. הצבת TC, קמפיין ומכניקת קרב ================= */
+      startTcDeployment(rows, cols, preset, customGrid, tcRadius, useTimer, arsenalType) {
+        this.hideAllOverlays();
+        this.phase = 'deploy';
+        this.isCampaign = false;
+        this.tcRadius = tcRadius;
+        this.useTurnTimer = useTimer;
+        this.setupBoardData(rows, cols, preset, customGrid);
+
+        this.blueTC = null;
+        this.deployQueue = arsenalType === 'fast'
+          ? ['FLAG', 'MARSH', 'GEN', 'HELI', 'CAPT', 'LIEUT', 'SERG', 'MINER', 'SCOUT', 'SENSOR', 'SPY', 'BOAT', 'BOMB', 'BOMB']
+          : [...FULL_ROSTER];
+        this.initialRosterSnapshot = [...this.deployQueue];
+        this.selectedDeployIdx = 0;
+
+        document.getElementById('battleHud').classList.remove('hidden');
+        document.getElementById('deployPanel').classList.remove('hidden');
+        document.getElementById('tutorialBanner').classList.add('hidden');
+        document.getElementById('sideObjectiveBanner').classList.add('hidden');
+        document.getElementById('battleTimerWrapper').classList.toggle('hidden', !useTimer);
+        document.getElementById('deployTitle').textContent = '🏛️ לחץ על יבשה בחצי שלך להקמת מפקדת TC';
+        document.getElementById('btnConfirmDeploy').classList.add('hidden');
+
+        this.renderDeployTray();
+        this.logAction('blue', 'שלב הפריסה: הקם תחילה את מפקדת ה-TC על משבצת יבשה.');
+      }
+
+      renderDeployTray() {
+        const tray = document.getElementById('deployTray');
+        tray.innerHTML = this.deployQueue.map((type, idx) => {
+          const d = PIECE_DEFS[type];
+          const active = idx === this.selectedDeployIdx;
+          return `
+            <button data-idx="${idx}" class="deploy-piece-btn shrink-0 px-2.5 py-1.5 rounded-xl border text-center transition ${active ? 'bg-sky-500/30 border-sky-400 scale-105' : 'bg-slate-800 border-slate-700'}">
+              <div class="text-lg leading-none">${d.icon}</div>
+              <div class="text-[10px] font-bold text-slate-200 mt-0.5">${d.name}</div>
+            </button>
+          `;
+        }).join('');
+
+        tray.querySelectorAll('.deploy-piece-btn').forEach(btn => {
+          let holdTimer = null;
+          const idx = Number(btn.dataset.idx);
+          btn.addEventListener('pointerdown', () => {
+            holdTimer = setTimeout(() => {
+              this.openArsenalModal(this.deployQueue[idx]);
+            }, 420);
+          });
+          btn.addEventListener('pointerup', () => clearTimeout(holdTimer));
+          btn.addEventListener('pointerleave', () => clearTimeout(holdTimer));
+          btn.addEventListener('click', () => {
+            this.selectedDeployIdx = idx;
+            this.renderDeployTray();
+          });
+        });
+      }
+
+      openArsenalModal(type) {
+        const d = PIECE_DEFS[type];
+        if (!d) return;
+        document.getElementById('aiModalIcon').textContent = d.icon;
+        document.getElementById('aiModalTitle').textContent = d.name;
+        document.getElementById('aiModalRank').textContent = d.rank > 0 && d.rank < 11 ? `דרגה ${d.rank}` : 'יחידה מיוחדת';
+        document.getElementById('aiModalMove').textContent = d.moveTxt;
+        document.getElementById('aiModalTerrain').textContent = d.terrainTxt;
+        document.getElementById('aiModalAbility').textContent = d.desc;
+        document.getElementById('arsenalInfoModal').classList.remove('hidden');
+      }
+
+      isInsideTcCircle(r, c) {
+        if (!this.blueTC) return false;
+        return Math.hypot(r - this.blueTC.r, c - this.blueTC.c) <= this.tcRadius + 0.35;
+      }
+
+      resetDeployment() {
+        if (this.phase !== 'deploy') return;
+        for (let r = 0; r < this.rows; r++) {
+          for (let c = 0; c < this.cols; c++) {
+            if (this.landGrid[r][c]?.team === 'blue') this.landGrid[r][c] = null;
+            if (this.navalGrid[r][c]?.team === 'blue') this.navalGrid[r][c] = null;
+          }
+        }
+        this.blueTC = null;
+        this.deployQueue = [...this.initialRosterSnapshot];
+        this.selectedDeployIdx = 0;
+        document.getElementById('deployTitle').textContent = '🏛️ לחץ על יבשה להקמת TC (לחיצה על כלי מוצב מחזירה אותו)';
+        document.getElementById('btnConfirmDeploy').classList.add('hidden');
+        this.renderDeployTray();
+        this.logAction('blue', '🔄 ההצבה אופסה. כל הכלים ו-TC חזרו לארסנל.');
+      }
+
+      autoDeployAll() {
+        if (!this.blueTC) {
+          const r = this.rows - 2;
+          const c = Math.floor(this.cols / 2);
+          this.terrain[r][c] = 0;
+          this.blueTC = { r, c };
+          this.landGrid[r][c] = this.makePiece('TC', 'blue', true);
+        }
+        while (this.deployQueue.length > 0) {
+          const type = this.deployQueue.shift();
+          const def = PIECE_DEFS[type];
+          let placed = false;
+          for (let r = this.rows - 1; r >= Math.floor(this.rows / 2) && !placed; r--) {
+            for (let c = 0; c < this.cols && !placed; c++) {
+              if (!this.isInsideTcCircle(r, c)) continue;
+              if (def.naval) {
+                if ((this.terrain[r][c] === 1 || this.terrain[r][c] === 2 || this.terrain[r][c] === 3) && !this.navalGrid[r][c]) {
+                  this.navalGrid[r][c] = this.makePiece(type, 'blue', false);
+                  placed = true;
+                }
+              } else if (this.terrain[r][c] === 0 && !this.landGrid[r][c]) {
+                this.landGrid[r][c] = this.makePiece(type, 'blue', false);
+                placed = true;
+              }
+            }
+          }
+          if (!placed) {
+            for (let r = this.rows - 1; r >= Math.floor(this.rows / 2) && !placed; r--) {
+              for (let c = 0; c < this.cols && !placed; c++) {
+                if (this.terrain[r][c] === 0 && !this.landGrid[r][c] && !def.naval) {
+                  this.landGrid[r][c] = this.makePiece(type, 'blue', false);
+                  placed = true;
+                }
+              }
+            }
+          }
+        }
+        this.renderDeployTray();
+        document.getElementById('deployTitle').textContent = '✅ כל הכוחות נפרסו! לחץ "✔ סיים הצבה" לתחילת הקרב.';
+        document.getElementById('btnConfirmDeploy').classList.remove('hidden');
+      }
+
+      finishDeployment() {
+        if (this.blueTC && this.landGrid[this.blueTC.r]?.[this.blueTC.c]?.type === 'TC') {
+          this.landGrid[this.blueTC.r][this.blueTC.c] = null;
+        }
+        this.deployEnemyForces(6);
+        this.phase = 'battle';
+        this.currentTurn = 'blue';
+        document.getElementById('deployPanel').classList.add('hidden');
+        this.updateTurnHud();
+        this.logAction('blue', '🚀 הפריסה הושלמה! הקרב מתחיל — תורך.');
+        this.saveAutoState();
+        if (this.useTurnTimer) this.startTurnTimer();
+      }
+
+      startCampaignStage(lvl) {
+        this.hideAllOverlays();
+        this.phase = 'battle';
+        this.isCampaign = true;
+        this.campaignLevel = lvl;
+        const presets = ['classic_bridges', 'twin_bridges', 'river_delta', 'cross_bridges', 'coral_maze', 'peninsula_fort', 'four_corners', 'archipelago', 'canyon_pass'];
+        const preset = presets[(lvl - 1) % presets.length];
+        const stageRng = this.createSeededRng(lvl * 7919 + 1337);
+        this.setupBoardData(12, 10, preset, null, stageRng);
+
+        this.currentTurn = 'blue';
+        this.isAiBusy = false;
+        this.isGameOver = false;
+
+        const isTimedSideChallenge = (lvl % 5 === 0);
+        this.useTurnTimer = isTimedSideChallenge;
+        this.turnTimeLimit = Math.max(30, 60 - Math.floor(lvl / 5) * 3);
+
+        document.getElementById('battleHud').classList.remove('hidden');
+        document.getElementById('deployPanel').classList.add('hidden');
+        document.getElementById('tutorialBanner').classList.add('hidden');
+        document.getElementById('battleTimerWrapper').classList.toggle('hidden', !isTimedSideChallenge);
+
+        const objBanner = document.getElementById('sideObjectiveBanner');
+        const objText = document.getElementById('sideObjectiveText');
+        if (isTimedSideChallenge) {
+          objBanner.classList.remove('hidden');
+          objText.textContent = `אתגר צדדי שלב ${lvl}: מבצע בזק תחת שעון תור (${this.turnTimeLimit} שניות)!`;
+        } else if (lvl % 3 === 0) {
+          objBanner.classList.remove('hidden');
+          objText.textContent = `מטרה נלווית שלב ${lvl}: נטרל מוקשים וגלה אויבים בעזרת סנסור המכ"ם.`;
+        } else {
+          objBanner.classList.add('hidden');
+        }
+
+        this.populateDemoBattle(lvl);
+        this.updateTurnHud();
+        this.logAction('blue', `🏆 שלב קמפיין ${lvl} החל! הדגל שלך מוגן בעורף; התקדם דרך הגשרים וכבוש את דגל האויב.`);
+        this.saveAutoState();
+        if (this.useTurnTimer) this.startTurnTimer();
+      }
+
+      populateDemoBattle(difficultyLvl = 1) {
+        const flagR = this.rows - 1;
+        const flagC = Math.floor(this.cols / 2);
+        this.terrain[flagR][flagC] = 0;
+        this.landGrid[flagR][flagC] = this.makePiece('FLAG', 'blue', true);
+
+        const shieldCoords = [[flagR, flagC - 1], [flagR, flagC + 1], [flagR - 1, flagC], [flagR - 1, flagC - 1], [flagR - 1, flagC + 1]];
+        const shieldTypes = ['BOMB', 'BOMB', 'SERG', 'MINER', 'CAPT'];
+        shieldCoords.forEach(([sr, sc], idx) => {
+          if (sr >= 0 && sr < this.rows && sc >= 0 && sc < this.cols) {
+            this.terrain[sr][sc] = 0;
+            this.landGrid[sr][sc] = this.makePiece(shieldTypes[idx], 'blue', false);
+          }
+        });
+
+        const blueUnits = ['MARSH', 'GEN', 'COL', 'HELI', 'PLANE', 'LIEUT', 'DRONE', 'SCOUT', 'SCOUT', 'SENSOR', 'SPY', 'MINER'];
+        let uIdx = 0;
+        for (let r = this.rows - 2; r >= Math.floor(this.rows / 2) + 1 && uIdx < blueUnits.length; r--) {
+          for (let c = 0; c < this.cols && uIdx < blueUnits.length; c++) {
+            if (this.terrain[r][c] === 0 && !this.landGrid[r][c]) {
+              this.landGrid[r][c] = this.makePiece(blueUnits[uIdx++], 'blue', false);
+            }
+          }
+        }
+        for (let r = 0; r < this.rows; r++) {
+          for (let c = 0; c < this.cols; c++) {
+            if (this.terrain[r][c] === 1 && r >= Math.floor(this.rows / 2) - 1) {
+              this.navalGrid[r][c] = this.makePiece('BOAT', 'blue', false);
+              r = this.rows;
+              break;
+            }
+          }
+        }
+        this.deployEnemyForces(difficultyLvl);
+      }
+
+      deployEnemyForces(difficultyLvl = 1) {
+        const rng = this.currentRng || Math.random;
+        const eFlagC = Math.floor(this.cols / 2);
+        this.terrain[0][eFlagC] = 0;
+        this.landGrid[0][eFlagC] = this.makePiece('FLAG', 'red', false);
+
+        const enemyPool = ['BOMB', 'BOMB', 'MARSH', 'GEN', 'COL', 'CAPT', 'LIEUT', 'SERG', 'MINER', 'SCOUT', 'SCOUT', 'SPY', 'DRONE', 'HELI', 'SENSOR'];
+        if (difficultyLvl >= 10) enemyPool.push('MARSH', 'BOMB');
+        let idx = 0;
+        for (let r = 0; r <= Math.floor(this.rows / 2) - 2 && idx < enemyPool.length; r++) {
+          for (let c = 0; c < this.cols && idx < enemyPool.length; c++) {
+            if (this.terrain[r][c] === 0 && !this.landGrid[r][c] && rng() < 0.68) {
+              this.landGrid[r][c] = this.makePiece(enemyPool[idx++], 'red', false);
+            }
+          }
+        }
+        for (let r = 0; r <= Math.floor(this.rows / 2); r++) {
+          for (let c = 0; c < this.cols; c++) {
+            if (this.terrain[r][c] === 1) {
+              this.navalGrid[r][c] = this.makePiece('BOAT', 'red', false);
+              r = this.rows;
+              break;
+            }
+          }
+        }
+      }
+
+      handleBoardTap(clientX, clientY) {
+        if (this.isGameOver || this.animMove) return;
+        const { tile, ox, oy } = this.getBoardMetrics();
+        const c = Math.floor((clientX - ox) / tile);
+        const r = Math.floor((clientY - oy) / tile);
+        if (r < 0 || r >= this.rows || c < 0 || c >= this.cols) return;
+
+        if (this.phase === 'deploy') {
+          this.handleDeployTap(r, c);
+          return;
+        }
+
+        if (this.phase !== 'battle' && this.phase !== 'tutorial') return;
+        if (this.phase === 'battle' && this.currentTurn !== 'blue') return;
+
+        if (this.selected) {
+          const move = this.validMoves.find(m => m.r === r && m.c === c);
+          if (move) {
+            this.performMove(this.selected.r, this.selected.c, this.selected.layer, move);
+            return;
+          }
+        }
+
+        const landP = this.landGrid[r][c];
+        const navP = this.navalGrid[r][c];
+        if (landP && navP && landP.team === 'blue' && navP.team === 'blue') {
+          const nextLayer = (this.selected && this.selected.r === r && this.selected.c === c && this.selected.layer === 'land') ? 'naval' : 'land';
+          this.selectPiece(r, c, nextLayer);
+        } else if (landP && landP.team === 'blue') {
+          this.selectPiece(r, c, 'land');
+        } else if (navP && navP.team === 'blue') {
+          this.selectPiece(r, c, 'naval');
+        } else {
+          this.selected = null;
+          this.validMoves = [];
+          document.getElementById('selectedUnitCard').classList.add('hidden');
+        }
+      }
+
+      handleDeployTap(r, c) {
+        if (!this.blueTC) {
+          if (r < Math.floor(this.rows / 2) || this.terrain[r][c] !== 0) {
+            this.logAction('blue', '⚠️ ניתן להקים TC רק על משבצת יבשה בחצי התחתון שלך.');
+            return;
+          }
+          this.blueTC = { r, c };
+          this.landGrid[r][c] = this.makePiece('TC', 'blue', true);
+          document.getElementById('deployTitle').textContent = '🎯 הצב כלים במעגל TC (לחיצה על כלי מוצב מחזירה אותו לארסנל)';
+          this.playTone(620, 0.12);
+          this.logAction('blue', `🏛️ בסיס TC הוקם ב-${this.formatCoord(r, c)}.`);
+          return;
+        }
+
+        const existingLand = this.landGrid[r][c];
+        const existingNav = this.navalGrid[r][c];
+        if (existingLand && existingLand.team === 'blue' && existingLand.type !== 'TC') {
+          this.landGrid[r][c] = null;
+          this.deployQueue.unshift(existingLand.type);
+          this.selectedDeployIdx = 0;
+          this.renderDeployTray();
+          document.getElementById('btnConfirmDeploy').classList.add('hidden');
+          this.playTone(360, 0.08);
+          this.logAction('blue', `↩️ ${existingLand.name} הוחזר מ-${this.formatCoord(r, c)} לארסנל.`);
+          return;
+        }
+        if (existingNav && existingNav.team === 'blue') {
+          this.navalGrid[r][c] = null;
+          this.deployQueue.unshift(existingNav.type);
+          this.selectedDeployIdx = 0;
+          this.renderDeployTray();
+          document.getElementById('btnConfirmDeploy').classList.add('hidden');
+          this.playTone(360, 0.08);
+          this.logAction('blue', `↩️ ${existingNav.name} הוחזר מ-${this.formatCoord(r, c)} לארסנל.`);
+          return;
+        }
+
+        if (this.deployQueue.length === 0) return;
+        if (!this.isInsideTcCircle(r, c)) {
+          this.logAction('blue', '⚠️ הצב יחידות אך ורק בתוך מעגל הפריסה המואר של ה-TC.');
+          return;
+        }
+
+        const type = this.deployQueue[this.selectedDeployIdx];
+        const def = PIECE_DEFS[type];
+        if (def.naval) {
+          if (this.terrain[r][c] === 0 || this.navalGrid[r][c]) return;
+          this.navalGrid[r][c] = this.makePiece(type, 'blue', false);
+        } else {
+          if (this.terrain[r][c] !== 0 || this.landGrid[r][c]) return;
+          this.landGrid[r][c] = this.makePiece(type, 'blue', false);
+        }
+
+        this.deployQueue.splice(this.selectedDeployIdx, 1);
+        this.selectedDeployIdx = Math.min(this.selectedDeployIdx, Math.max(0, this.deployQueue.length - 1));
+        this.renderDeployTray();
+        this.playTone(500, 0.08);
+
+        if (this.deployQueue.length === 0) {
+          document.getElementById('deployTitle').textContent = '✅ כל הכוחות הוצבו! לחץ "✔ סיים הצבה" להתחלה.';
+          document.getElementById('btnConfirmDeploy').classList.remove('hidden');
+        }
+      }
+
+      positionUnitCard(r = null, c = null) {
+        const card = document.getElementById('selectedUnitCard');
+        const fullBody = document.getElementById('sucFullBody');
+        const miniBar = document.getElementById('sucMiniBar');
+        if (!card) return;
+
+        card.style.left = '50%';
+        card.style.transform = 'translateX(-50%)';
+
+        if (this.unitCardMinimized) {
+          fullBody.classList.add('hidden');
+          miniBar.classList.remove('hidden');
+          card.style.top = 'auto';
+          card.style.bottom = '64px';
+          return;
+        }
+
+        miniBar.classList.add('hidden');
+        fullBody.classList.remove('hidden');
+
+        const selR = r !== null ? r : (this.selected ? this.selected.r : Math.floor(this.rows / 2));
+        const isInTopHalf = selR < this.rows / 2;
+        if (isInTopHalf) {
+          card.style.top = 'auto';
+          card.style.bottom = '68px';
+        } else {
+          card.style.bottom = 'auto';
+          card.style.top = '64px';
+        }
+      }
+
+      selectPiece(r, c, layer) {
+        const grid = layer === 'naval' ? this.navalGrid : this.landGrid;
+        const p = grid[r][c];
+        if (!p) return;
+        this.selected = { r, c, layer };
+        this.validMoves = this.getValidMoves(r, c, layer, 'move');
+        this.unitCardMinimized = false;
+
+        const card = document.getElementById('selectedUnitCard');
+        const def = PIECE_DEFS[p.type];
+        document.getElementById('sucIcon').textContent = p.icon;
+        document.getElementById('sucName').textContent = `${p.name} (${this.formatCoord(r, c)})`;
+        document.getElementById('sucRank').textContent = p.rank > 0 && p.rank < 11 ? `דרגה ${p.rank}` : 'מיוחד';
+
+        document.getElementById('sucMiniIcon').textContent = p.icon;
+        document.getElementById('sucMiniName').textContent = `${p.name} (${this.formatCoord(r, c)})`;
+        document.getElementById('sucMiniRank').textContent = p.rank > 0 && p.rank < 11 ? `דרגה ${p.rank}` : 'מיוחד';
+
+        const cargoTxt = p.cargo?.length ? ` | מטען טעון: ${p.cargo.map(x => x.name).join(', ')}` : '';
+        const fogTxt = (!p.revealed && p.fiftyPercentInfo) ? ` | ❓ ערפל 50% (${p.fiftyPercentInfo})` : '';
+        document.getElementById('sucDesc').textContent = `${def.desc}${cargoTxt}${fogTxt}`;
+
+        const abBtn = document.getElementById('btnUnitAbility');
+        if (p.type === 'SENSOR' || p.type === 'PLANE') {
+          abBtn.classList.remove('hidden');
+          abBtn.textContent = '📡 הפעל סריקת מכ"ם';
+        } else if (p.type === 'BOMB') {
+          abBtn.classList.remove('hidden');
+          abBtn.textContent = '💣 פיצוץ מבוקר';
+        } else {
+          abBtn.classList.add('hidden');
+        }
+
+        const atkBtn = document.getElementById('btnUnitAttack');
+        const hasAdjacentEnemy = this.validMoves.some(m => m.isAttack);
+        atkBtn.classList.toggle('hidden', !hasAdjacentEnemy);
+
+        const loadBtn = document.getElementById('btnUnitLoad');
+        const unloadBtn = document.getElementById('btnUnitUnload');
+        const canParticipateInCargo = Boolean(p.transport || p.infantry);
+        loadBtn.classList.toggle('hidden', !canParticipateInCargo);
+        if (canParticipateInCargo) {
+          loadBtn.textContent = p.transport
+            ? `📦 העמס יחידה (${p.cargo?.length || 0}/2)`
+            : '📦 העמס לתובלה';
+        }
+
+        if (p.transport) {
+          unloadBtn.classList.remove('hidden');
+          unloadBtn.textContent = `🪂 פרוק יחידה (${p.cargo?.length || 0})`;
+        } else {
+          unloadBtn.classList.add('hidden');
+        }
+
+        card.classList.remove('hidden');
+        this.positionUnitCard(r, c);
+      }
+
+      getValidMoves(r, c, layer, actionMode = 'move') {
+        const grid = layer === 'naval' ? this.navalGrid : this.landGrid;
+        const p = grid[r][c];
+        if (!p || !p.movable) return [];
+
+        const moves = [];
+        const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+        if (actionMode === 'unload') {
+          if (p.transport && p.cargo && p.cargo.length > 0) {
+            for (const [dr, dc] of dirs) {
+              const ur = r + dr, uc = c + dc;
+              if (ur < 0 || ur >= this.rows || uc < 0 || uc >= this.cols) continue;
+              if (this.terrain[ur][uc] !== 1 && !this.landGrid[ur][uc]) {
+                moves.push({ r: ur, c: uc, targetLayer: 'land', isUnload: true });
+              }
+            }
+          }
+          return moves;
+        }
+
+        if (actionMode === 'load') {
+          for (const [dr, dc] of dirs) {
+            const nr = r + dr, nc = c + dc;
+            if (nr < 0 || nr >= this.rows || nc < 0 || nc >= this.cols) continue;
+            const landTarget = this.landGrid[nr][nc];
+            const navTarget = this.navalGrid[nr][nc];
+
+            if (p.transport && p.cargo && p.cargo.length < 2) {
+              if (landTarget && landTarget.team === p.team && landTarget.infantry) {
+                moves.push({ r: nr, c: nc, targetLayer: p.naval ? 'naval' : 'land', isPickup: true });
+              }
+            }
+            if (p.infantry) {
+              if (navTarget && navTarget.team === p.team && navTarget.transport && navTarget.cargo.length < 2) {
+                moves.push({ r: nr, c: nc, targetLayer: 'naval', isLoad: true });
+              } else if (landTarget && landTarget.team === p.team && landTarget.transport && landTarget.cargo.length < 2) {
+                moves.push({ r: nr, c: nc, targetLayer: 'land', isLoad: true });
+              }
+            }
+          }
+          return moves;
+        }
+
+        for (const [dr, dc] of dirs) {
+          for (let step = 1; step <= p.range; step++) {
+            const nr = r + dr * step;
+            const nc = c + dc * step;
+            if (nr < 0 || nr >= this.rows || nc < 0 || nc >= this.cols) break;
+
+            const terr = this.terrain[nr][nc];
+
+            if (p.naval) {
+              if (terr === 0) break;
+              const navTarget = this.navalGrid[nr][nc];
+              const landTarget = this.landGrid[nr][nc];
+
+              if (navTarget) {
+                if (navTarget.team !== p.team && step === 1) {
+                  moves.push({ r: nr, c: nc, targetLayer: 'naval', isAttack: true });
+                }
+                break;
+              }
+              if (landTarget && landTarget.team !== p.team && step === 1 && (terr === 2 || terr === 3)) {
+                moves.push({ r: nr, c: nc, targetLayer: 'land', isAttack: true });
+              }
+              moves.push({ r: nr, c: nc, targetLayer: 'naval' });
+            } else if (p.air) {
+              const landTarget = this.landGrid[nr][nc];
+              if (landTarget) {
+                if (landTarget.team !== p.team && step === 1) {
+                  moves.push({ r: nr, c: nc, targetLayer: 'land', isAttack: true });
+                }
+                break;
+              }
+              moves.push({ r: nr, c: nc, targetLayer: 'land' });
+            } else {
+              if (terr === 1) break;
+              const landTarget = this.landGrid[nr][nc];
+
+              if (landTarget) {
+                if (landTarget.team !== p.team && step === 1) {
+                  moves.push({ r: nr, c: nc, targetLayer: 'land', isAttack: true });
+                }
+                break;
+              }
+              moves.push({ r: nr, c: nc, targetLayer: 'land' });
+            }
+          }
+        }
+        return moves;
+      }
+
+      spawnExplosionFx(r, c, color = '#f97316', kind = 'blast') {
+        const particles = Array.from({ length: 14 }, (_, i) => {
+          const ang = (Math.PI * 2 * i) / 14;
+          const spd = 0.6 + Math.random() * 0.8;
+          return { vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd };
+        });
+        this.fxEffects.push({ r, c, color, kind, startTime: performance.now(), dur: 520, particles });
+      }
+
+      performMove(fromR, fromC, fromLayer, move) {
+        if (this.animMove) return;
+        const srcGrid = fromLayer === 'naval' ? this.navalGrid : this.landGrid;
+        const attacker = srcGrid[fromR][fromC];
+        if (!attacker) return;
+
+        if (move.isUnload && attacker.cargo && attacker.cargo.length > 1 && this.selectedUnloadIdx === null && attacker.team === 'blue') {
+          this.pendingUnload = { fromR, fromC, fromLayer, move };
+          const listEl = document.getElementById('unloadSelectList');
+          listEl.innerHTML = attacker.cargo.map((unit, idx) => `
+            <button data-uidx="${idx}" class="pick-unload-unit-btn w-full py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-teal-500/20 border border-teal-400/40 text-white font-bold text-xs flex items-center justify-between">
+              <span>${unit.icon} ${unit.name} (דרגה ${unit.rank})</span>
+              <span class="text-teal-300">${unit.fiftyPercentInfo ? `❓ 50% ${unit.fiftyPercentInfo}` : (unit.revealed ? '👁️ חשוף' : '🔒 מוסתר')}</span>
+            </button>
+          `).join('');
+          listEl.querySelectorAll('.pick-unload-unit-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              this.selectedUnloadIdx = Number(btn.dataset.uidx);
+              document.getElementById('unloadSelectModal').classList.add('hidden');
+              const p = this.pendingUnload;
+              this.pendingUnload = null;
+              if (p) this.performMove(p.fromR, p.fromC, p.fromLayer, p.move);
+            });
+          });
+          document.getElementById('unloadSelectModal').classList.remove('hidden');
+          return;
+        }
+
+        this.selected = null;
+        this.validMoves = [];
+        document.getElementById('selectedUnitCard').classList.add('hidden');
+
+        if (move.isUnload && attacker.cargo && attacker.cargo.length > 0) {
+          const popIdx = (this.selectedUnloadIdx !== null && attacker.cargo[this.selectedUnloadIdx])
+            ? this.selectedUnloadIdx
+            : attacker.cargo.length - 1;
+          this.selectedUnloadIdx = null;
+          const [passenger] = attacker.cargo.splice(popIdx, 1);
+
+          if (passenger.fiftyPercentInfo) {
+            passenger.revealed = false;
+          } else {
+            passenger.revealed = true;
+          }
+
+          this.landGrid[move.r][move.c] = passenger;
+          this.lastMoveTrails[attacker.team] = {
+            fromR, fromC, toR: move.r, toC: move.c,
+            cells: [{ r: fromR, c: fromC }, { r: move.r, c: move.c }],
+            team: attacker.team
+          };
+          this.spawnExplosionFx(move.r, move.c, '#4ade80', 'radar');
+          this.playTone(540, 0.1);
+          this.vibrate(attacker.team === 'blue', 22);
+          const fogNote = passenger.fiftyPercentInfo ? ` (נכנס לערפל ❓ עם 50% ${passenger.fiftyPercentInfo})` : '';
+          this.logAction(attacker.team, `🪂 ${passenger.name} נפרק מתוך ${attacker.name} אל ${this.formatCoord(move.r, move.c)}!${fogNote}`);
+          this.endTurnAndAdvance(attacker.team === 'blue' ? 'red' : 'blue');
+          return;
+        }
+
+        const trailCells = [{ r: fromR, c: fromC }];
+        const stepR = Math.sign(move.r - fromR);
+        const stepC = Math.sign(move.c - fromC);
+        let cr = fromR, cc = fromC;
+        while (cr !== move.r || cc !== move.c) {
+          cr += stepR;
+          cc += stepC;
+          trailCells.push({ r: cr, c: cc });
+        }
+        this.lastMoveTrails[attacker.team] = { fromR, fromC, toR: move.r, toC: move.c, cells: trailCells, team: attacker.team };
+
+        srcGrid[fromR][fromC] = null;
+        this.playTone(attacker.air ? 640 : (attacker.naval ? 320 : 460), 0.09);
+        this.animMove = {
+          piece: attacker,
+          fromR, fromC,
+          toR: move.r, toC: move.c,
+          startTime: performance.now(),
+          dur: 420,
+          onDone: () => this.completeMoveAfterAnim(attacker, fromR, fromC, fromLayer, move)
+        };
+      }
+
+      completeMoveAfterAnim(attacker, fromR, fromC, fromLayer, move) {
+        const dstGrid = move.targetLayer === 'naval' ? this.navalGrid : this.landGrid;
+        const fromTxt = this.formatCoord(fromR, fromC);
+        const toTxt = this.formatCoord(move.r, move.c);
+
+        if (move.isLoad) {
+          const carrier = dstGrid[move.r][move.c];
+          const wasRevealed = Boolean(attacker.revealed || attacker.fiftyPercentInfo);
+          const prevLabel = attacker.fiftyPercentInfo || attacker.name;
+          if (wasRevealed) {
+            attacker.fiftyPercentInfo = prevLabel;
+          }
+          if (carrier.cargo.length >= 1) {
+            carrier.cargo.forEach(cUnit => {
+              if (cUnit.revealed || cUnit.fiftyPercentInfo) {
+                cUnit.fiftyPercentInfo = cUnit.fiftyPercentInfo || cUnit.name;
+                cUnit.revealed = false;
+              }
+            });
+          }
+          attacker.revealed = false;
+          carrier.cargo.push(attacker);
+          this.spawnExplosionFx(move.r, move.c, '#facc15', 'radar');
+          const fiftyTxt = (carrier.cargo.length >= 2 && attacker.fiftyPercentInfo) ? ` — נכנס לערפל 50% ${attacker.fiftyPercentInfo}` : '';
+          this.logAction(attacker.team, `📦 ${attacker.name} הועמס על ${carrier.name} ב-${toTxt}${fiftyTxt}.`);
+          this.vibrate(attacker.team === 'blue', 20);
+          this.endTurnAndAdvance(attacker.team === 'blue' ? 'red' : 'blue');
+          return;
+        }
+
+        if (move.isPickup) {
+          const passenger = this.landGrid[move.r][move.c];
+          if (passenger) {
+            this.landGrid[move.r][move.c] = null;
+            const wasRevealed = Boolean(passenger.revealed || passenger.fiftyPercentInfo);
+            const prevLabel = passenger.fiftyPercentInfo || passenger.name;
+            if (wasRevealed) {
+              passenger.fiftyPercentInfo = prevLabel;
+            }
+            if (attacker.cargo.length >= 1) {
+              attacker.cargo.forEach(cUnit => {
+                if (cUnit.revealed || cUnit.fiftyPercentInfo) {
+                  cUnit.fiftyPercentInfo = cUnit.fiftyPercentInfo || cUnit.name;
+                  cUnit.revealed = false;
+                }
+              });
+            }
+            passenger.revealed = false;
+            attacker.cargo.push(passenger);
+          }
+          dstGrid[move.r][move.c] = attacker;
+          this.spawnExplosionFx(move.r, move.c, '#facc15', 'radar');
+          this.logAction(attacker.team, `📦 ${attacker.name} אסף והעמיס את ${passenger ? passenger.name : 'החייל'} ב-${toTxt}.`);
+          this.vibrate(attacker.team === 'blue', 20);
+          this.endTurnAndAdvance(attacker.team === 'blue' ? 'red' : 'blue');
+          return;
+        }
+
+        const defender = dstGrid[move.r][move.c];
+        if (!defender) {
+          dstGrid[move.r][move.c] = attacker;
+          if (attacker.team === 'blue') {
+            this.logAction('blue', `${attacker.name} נע מ-${fromTxt} ל-${toTxt}.`);
+          } else {
+            const label = attacker.revealed ? attacker.name : 'כלי ?';
+            this.logAction('red', `היריב הניע ${label} מ-${fromTxt} ל-${toTxt}.`);
+          }
+          this.vibrate(attacker.team === 'blue', 15);
+          this.endTurnAndAdvance(attacker.team === 'blue' ? 'red' : 'blue');
+          return;
+        }
+
+        if (attacker.rank > 0 && attacker.rank < 11 && defender.rank === attacker.rank) {
+          attacker.revealed = true;
+          defender.revealed = true;
+          if (attacker.team === 'blue') {
+            this.pendingTie = { fromR, fromC, fromLayer, move, attacker, defender };
+            document.getElementById('tieBreakerDesc').textContent = `${attacker.name} (${attacker.rank}) מול ${defender.name} (${defender.rank}) ב-${toTxt}. כיצד להכריע?`;
+            document.getElementById('tieBreakerModal').classList.remove('hidden');
+            return;
+          } else {
+            this.resolveCombatOutcome(fromR, fromC, fromLayer, move, attacker, defender, Math.random() < 0.5 ? 'mutual' : 'retreat');
+            return;
+          }
+        }
+
+        this.resolveCombatOutcome(fromR, fromC, fromLayer, move, attacker, defender, 'normal');
+      }
+
+      resolveCombatOutcome(fromR, fromC, fromLayer, move, attacker, defender, tieMode) {
+        const srcGrid = fromLayer === 'naval' ? this.navalGrid : this.landGrid;
+        const dstGrid = move.targetLayer === 'naval' ? this.navalGrid : this.landGrid;
+        const toTxt = this.formatCoord(move.r, move.c);
+        const nextTurn = attacker.team === 'blue' ? 'red' : 'blue';
+
+        if (tieMode === 'retreat') {
+          srcGrid[fromR][fromC] = attacker;
+          this.logAction(attacker.team, `🏳️ נסיגה בעימות שווה כוחות ב-${toTxt}.`);
+          this.endTurnAndAdvance(nextTurn);
+          return;
+        }
+
+        if (tieMode === 'mutual') {
+          dstGrid[move.r][move.c] = null;
+          this.spawnExplosionFx(move.r, move.c, '#f43f5e', 'blast');
+          this.playTone(170, 0.22);
+          this.vibrate(true, 45);
+          this.logAction(attacker.team, `⚔️ קרב עד המוות ב-${toTxt}: ${attacker.name} ו-${defender.name} הושמדו הדדית!`);
+          this.endTurnAndAdvance(nextTurn);
+          return;
+        }
+
+        attacker.revealed = true;
+        defender.revealed = true;
+
+        if (defender.type === 'FLAG') {
+          if (!attacker.infantry) {
+            srcGrid[fromR][fromC] = attacker;
+            this.logAction(attacker.team, '⚠️ רק חיילי חי"ר יכולים לכבוש את דגל האויב!');
+            this.endTurnAndAdvance(nextTurn);
+            return;
+          }
+          dstGrid[move.r][move.c] = attacker;
+          this.spawnExplosionFx(move.r, move.c, '#facc15', 'blast');
+          this.playTone(720, 0.3);
+          this.logAction(attacker.team, `🚩 ${attacker.name} כבש את דגל המפקדה ב-${toTxt}!`);
+          this.finishGame(attacker.team, attacker.team === 'blue' ? '🏆 כבשת את דגל האויב וניצחת בקרב!' : '💀 האויב כבש את הדגל שלך!');
+          return;
+        }
+
+        if (defender.type === 'BOMB') {
+          if (attacker.type === 'MINER' || attacker.type === 'DRONE') {
+            dstGrid[move.r][move.c] = attacker;
+            this.spawnExplosionFx(move.r, move.c, '#38bdf8', 'radar');
+            this.logAction(attacker.team, `🛠️ ${attacker.name} נטרל מוקש ב-${toTxt}!`);
+          } else {
+            dstGrid[move.r][move.c] = null;
+            this.spawnExplosionFx(move.r, move.c, '#ef4444', 'blast');
+            this.playTone(140, 0.25);
+            this.vibrate(true, 55);
+            this.logAction(attacker.team, `💥 ${attacker.name} עלה על מוקש ב-${toTxt} והושמד!`);
+          }
+          this.endTurnAndAdvance(nextTurn);
+          return;
+        }
+
+        const spyKillsMarshal = (attacker.type === 'SPY' && defender.type === 'MARSH');
+        const attackerWins = spyKillsMarshal || (attacker.rank > defender.rank);
+
+        if (attackerWins) {
+          dstGrid[move.r][move.c] = attacker;
+          this.spawnExplosionFx(move.r, move.c, attacker.team === 'blue' ? '#38bdf8' : '#ef4444', 'blast');
+          this.playTone(260, 0.16);
+          this.vibrate(true, 35);
+          this.logAction(attacker.team, `⚔️ ${attacker.name} (${attacker.rank}) חיסל את ${defender.name} (${defender.rank}) ב-${toTxt}!`);
+        } else {
+          this.spawnExplosionFx(move.r, move.c, defender.team === 'blue' ? '#38bdf8' : '#ef4444', 'blast');
+          this.playTone(180, 0.16);
+          this.vibrate(true, 35);
+          this.logAction(attacker.team, `🛡️ ${defender.name} (${defender.rank}) בלם והשמיד את ${attacker.name} (${attacker.rank}) ב-${toTxt}!`);
+        }
+
+        this.endTurnAndAdvance(nextTurn);
+      }
+
+      triggerUnitAbility() {
+        if (!this.selected || this.currentTurn !== 'blue') return;
+        const { r, c, layer } = this.selected;
+        const grid = layer === 'naval' ? this.navalGrid : this.landGrid;
+        const p = grid[r][c];
+        if (!p) return;
+
+        if (p.type === 'SENSOR' || p.type === 'PLANE') {
+          let found = 0;
+          for (let dr = -2; dr <= 2; dr++) {
+            for (let dc = -2; dc <= 2; dc++) {
+              const nr = r + dr, nc = c + dc;
+              if (nr >= 0 && nr < this.rows && nc >= 0 && nc < this.cols) {
+                [this.landGrid[nr][nc], this.navalGrid[nr][nc]].forEach(u => {
+                  if (u && u.team === 'red' && !u.revealed) {
+                    u.revealed = true;
+                    found++;
+                  }
+                });
+              }
+            }
+          }
+          this.spawnExplosionFx(r, c, '#38bdf8', 'radar');
+          this.playTone(840, 0.14);
+          this.logAction('blue', `📡 ${p.name} הפעיל סריקת מכ"ם ב-${this.formatCoord(r, c)} וחשף ${found} יחידות אויב!`);
+          this.selected = null;
+          this.validMoves = [];
+          document.getElementById('selectedUnitCard').classList.add('hidden');
+          this.endTurnAndAdvance('red');
+        } else if (p.type === 'BOMB') {
+          grid[r][c] = null;
+          this.spawnExplosionFx(r, c, '#f97316', 'blast');
+          this.playTone(130, 0.28);
+          const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+          let hits = 0;
+          for (const [dr, dc] of dirs) {
+            const nr = r + dr, nc = c + dc;
+            if (nr >= 0 && nr < this.rows && nc >= 0 && nc < this.cols && this.landGrid[nr][nc]?.team === 'red') {
+              this.landGrid[nr][nc] = null;
+              hits++;
+            }
+          }
+          this.logAction('blue', `💣 פיצוץ מבוקר ב-${this.formatCoord(r, c)} פגע ב-${hits} יחידות אויב!`);
+          this.selected = null;
+          this.validMoves = [];
+          document.getElementById('selectedUnitCard').classList.add('hidden');
+          this.endTurnAndAdvance('red');
+        }
+      }
+
+      triggerUnitLoadAction() {
+        if (!this.selected || this.currentTurn !== 'blue' || this.animMove) return;
+        const { r, c, layer } = this.selected;
+        const p = (layer === 'naval' ? this.navalGrid : this.landGrid)[r][c];
+        const loadMoves = this.getValidMoves(r, c, layer, 'load');
+        if (loadMoves.length > 0) {
+          this.validMoves = loadMoves;
+          this.logAction('blue', `📦 בחר על הלוח את ${p?.transport ? 'היחידה הסמוכה להעמסה' : 'כלי התובלה הסמוך לעלייה'}.`);
+        } else if (p?.transport && (p.cargo?.length || 0) >= 2) {
+          this.logAction('blue', '⚠️ כלי התובלה מלא (מקסימום 2 יחידות מועמסות).');
+        } else {
+          this.logAction('blue', '⚠️ יש להתקרב למרחק משבצת 1 מיחידת חי"ר / כלי תובלה פנוי כדי להעמיס.');
+        }
+      }
+
+      triggerUnitUnloadAction() {
+        if (!this.selected || this.currentTurn !== 'blue' || this.animMove) return;
+        const { r, c, layer } = this.selected;
+        const p = (layer === 'naval' ? this.navalGrid : this.landGrid)[r][c];
+        if (!p?.cargo || p.cargo.length === 0) {
+          this.logAction('blue', '⚠️ אין יחידות מועמסות בכלי התובלה כרגע.');
+          return;
+        }
+        const unloadMoves = this.getValidMoves(r, c, layer, 'unload');
+        if (unloadMoves.length > 0) {
+          this.validMoves = unloadMoves;
+          this.logAction('blue', '🪂 בחר על הלוח את משבצת היבשה הפנויה הסמוכה לפריקה.');
+        } else {
+          this.logAction('blue', '⚠️ יש להתקרב למשבצת יבשה/חוף פנויה סמוכה כדי לפרוק יחידה.');
+        }
+      }
+
+      triggerUnitAttackAction() {
+        if (!this.selected || this.currentTurn !== 'blue' || this.animMove) return;
+        const { r, c, layer } = this.selected;
+        const allMoves = this.getValidMoves(r, c, layer, 'move');
+        const attackMoves = allMoves.filter(m => m.isAttack);
+        if (attackMoves.length > 0) {
+          this.validMoves = attackMoves;
+          this.logAction('blue', '⚔️ בחר על הלוח את יחידת האויב הסמוכה שברצונך לתקוף.');
+        } else {
+          this.logAction('blue', '⚠️ אין יחידת אויב סמוכה בטווח תקיפה מיידי.');
+        }
+      }
+
+      endTurnAndAdvance(nextTeam) {
+        if (this.isGameOver) return;
+        this.clearTimers();
+
+        if (this.phase === 'tutorial') {
+          this.currentTurn = 'blue';
+          this.updateTurnHud();
+          return;
+        }
+
+        const redAlive = this.landGrid.flat().concat(this.navalGrid.flat()).some(u => u && u.team === 'red' && u.movable);
+        if (!redAlive) {
+          if (this.allianceMode) {
+            document.getElementById('allianceModal').classList.remove('hidden');
+            return;
+          }
+          this.finishGame('blue', '🏆 כל כוחות האויב הושמדו! ניצחון מוחלט!');
+          return;
+        }
+
+        this.currentTurn = nextTeam;
+        this.updateTurnHud();
+        this.saveAutoState();
+
+        if (nextTeam === 'blue') {
+          this.isAiBusy = false;
+          if (this.useTurnTimer) this.startTurnTimer();
+        } else {
+          this.runEnemyAiTurn();
+        }
+      }
+
+      runEnemyAiTurn() {
+        this.isAiBusy = true;
+        this.aiWatchdog = setTimeout(() => {
+          if (this.isAiBusy && !this.isGameOver) {
+            this.isAiBusy = false;
+            this.logAction('red', 'היריב השלים היערכות והעביר תור.');
+            this.endTurnAndAdvance('blue');
+          }
+        }, 3200);
+
+        this.aiHandle = setTimeout(() => {
+          try {
+            const candidates = [];
+            for (let r = 0; r < this.rows; r++) {
+              for (let c = 0; c < this.cols; c++) {
+                const lP = this.landGrid[r][c];
+                if (lP && lP.team === 'red' && lP.movable) {
+                  this.getValidMoves(r, c, 'land').forEach(m => candidates.push({ r, c, layer: 'land', move: m, piece: lP }));
+                }
+                const nP = this.navalGrid[r][c];
+                if (nP && nP.team === 'red' && nP.movable) {
+                  this.getValidMoves(r, c, 'naval').forEach(m => candidates.push({ r, c, layer: 'naval', move: m, piece: nP }));
+                }
+              }
+            }
+
+            if (candidates.length === 0) {
+              this.isAiBusy = false;
+              this.finishGame('blue', '🏆 לאויב לא נותרו מהלכים חוקיים!');
+              return;
+            }
+
+            candidates.sort((a, b) => {
+              const scoreA = (a.move.isAttack ? 20 : 0) + a.move.r;
+              const scoreB = (b.move.isAttack ? 20 : 0) + b.move.r;
+              return scoreB - scoreA;
+            });
+
+            const topPool = candidates.slice(0, Math.min(4, candidates.length));
+            const pick = topPool[Math.floor(Math.random() * topPool.length)];
+            this.isAiBusy = false;
+            this.performMove(pick.r, pick.c, pick.layer, pick.move);
+          } catch (err) {
+            this.isAiBusy = false;
+            this.endTurnAndAdvance('blue');
+          }
+        }, 520);
+      }
+
+      startTurnTimer() {
+        this.turnRemaining = this.turnTimeLimit;
+        document.getElementById('battleTimerText').textContent = `${this.turnRemaining}s`;
+        this.timerHandle = setInterval(() => {
+          this.turnRemaining--;
+          document.getElementById('battleTimerText').textContent = `${Math.max(0, this.turnRemaining)}s`;
+          if (this.turnRemaining <= 0) {
+            clearInterval(this.timerHandle);
+            if (this.currentTurn === 'blue' && !this.isAiBusy) {
+              this.logAction('blue', '⏱️ זמן התור הסתיים — התור עובר ליריב.');
+              this.endTurnAndAdvance('red');
+            }
+          }
+        }, 1000);
+      }
+
+      clearTimers() {
+        if (this.timerHandle) { clearInterval(this.timerHandle); this.timerHandle = null; }
+        if (this.aiHandle) { clearTimeout(this.aiHandle); this.aiHandle = null; }
+        if (this.aiWatchdog) { clearTimeout(this.aiWatchdog); this.aiWatchdog = null; }
+      }
+
+      updateTurnHud() {
+        const dot = document.getElementById('battleTurnDot');
+        const lbl = document.getElementById('battleTurnLabel');
+        if (this.phase === 'tutorial') {
+          dot.className = 'w-3 h-3 rounded-full bg-amber-400';
+          lbl.textContent = 'מצב הדרכה';
+          lbl.className = 'text-xs sm:text-sm font-black text-amber-300';
+        } else if (this.currentTurn === 'blue') {
+          dot.className = 'w-3 h-3 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]';
+          lbl.textContent = 'תורך';
+          lbl.className = 'text-xs sm:text-sm font-black text-sky-300';
+        } else {
+          dot.className = 'w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_8px_#f43f5e]';
+          lbl.textContent = 'תור האויב...';
+          lbl.className = 'text-xs sm:text-sm font-black text-rose-400';
+        }
+      }
+
+      logAction(team, text) {
+        const dotColor = team === 'blue' ? 'bg-sky-400' : 'bg-rose-500';
+        const latest = document.getElementById('hudLatestLog');
+        if (latest) {
+          latest.innerHTML = `<span class="w-2.5 h-2.5 rounded-full ${dotColor} shrink-0"></span><span class="truncate">${text}</span>`;
+        }
+        const list = document.getElementById('hudExpandedLogs');
+        if (list) {
+          const row = document.createElement('div');
+          row.className = 'flex items-center gap-2 text-xs text-slate-300';
+          row.innerHTML = `<span class="w-2 h-2 rounded-full ${dotColor} shrink-0"></span><span>${text}</span>`;
+          list.prepend(row);
+        }
+      }
+
+      finishGame(winnerTeam, desc) {
+        this.isGameOver = true;
+        this.clearTimers();
+        localStorage.removeItem('attacktik_autosave');
+        if (winnerTeam === 'blue' && this.isCampaign && this.campaignLevel >= this.unlockedCampaign) {
+          this.unlockedCampaign = Math.min(50, this.campaignLevel + 1);
+          localStorage.setItem('attacktik_camp', String(this.unlockedCampaign));
+        }
+        document.getElementById('victoryIcon').textContent = winnerTeam === 'blue' ? '🏆' : '💀';
+        document.getElementById('victoryTitle').textContent = winnerTeam === 'blue' ? 'ניצחון טקטי!' : 'הפסד בקרב';
+        document.getElementById('victoryDesc').textContent = desc;
+        document.getElementById('victoryModal').classList.remove('hidden');
+      }
+
+      /* ================= 5. רינדור 60FPS + שומר מסך זירת אש ענקית + אנימציות ================= */
+      generateScreensaverWorld() {
+        const wRows = 42;
+        const wCols = 42;
+        const seed1 = Math.random() * 100;
+        const seed2 = Math.random() * 100;
+        const scale = 0.14 + Math.random() * 0.06;
+
+        const terrain = Array.from({ length: wRows }, (_, r) =>
+          Array.from({ length: wCols }, (_, c) => {
+            const h = Math.sin(r * scale + seed1) + Math.cos(c * scale + seed2) + Math.sin((r + c) * 0.09 + seed1) * 0.6;
+            return h > -0.15 ? 0 : 1;
+          })
+        );
+
+        for (let r = 6; r < wRows - 6; r += 7) {
+          let inSea = false, startC = -1;
+          for (let c = 2; c < wCols - 2; c++) {
+            if (terrain[r][c] === 1 && !inSea) { inSea = true; startC = c; }
+            else if (terrain[r][c] === 0 && inSea) {
+              if (c - startC >= 2 && c - startC <= 8 && startC > 2) {
+                for (let bc = startC; bc < c; bc++) terrain[r][bc] = 2;
+              }
+              inSea = false;
+            }
+          }
+        }
+        for (let c = 6; c < wCols - 6; c += 7) {
+          let inSea = false, startR = -1;
+          for (let r = 2; r < wRows - 2; r++) {
+            if (terrain[r][c] === 1 && !inSea) { inSea = true; startR = r; }
+            else if (terrain[r][c] === 0 && inSea) {
+              if (r - startR >= 2 && r - startR <= 8 && startR > 2) {
+                for (let br = startR; br < r; br++) terrain[br][c] = 3;
+              }
+              inSea = false;
+            }
+          }
+        }
+
+        const landIcons = ['⚔️', '🎖️', '🏅', '🦅', '⭐', '🌟', '🛠️', '🔭', '📡'];
+        const units = [];
+
+        for (let i = 0; i < 42; i++) {
+          for (let tries = 0; tries < 25; tries++) {
+            const r = 3 + Math.floor(Math.random() * (wRows - 6));
+            const c = 3 + Math.floor(Math.random() * (wCols - 6));
+            if (terrain[r][c] !== 1) {
+              const team = i % 2 === 0 ? 'blue' : 'red';
+              units.push({
+                kind: 'land',
+                team,
+                icon: landIcons[Math.floor(Math.random() * landIcons.length)],
+                r: r + 0.5,
+                c: c + 0.5,
+                targetR: r + 0.5,
+                targetC: c + 0.5,
+                speed: 0.45 + Math.random() * 0.25,
+                waitUntil: performance.now() + Math.random() * 1200,
+                fireCooldown: Math.random() * 2000
+              });
+              break;
+            }
+          }
+        }
+
+        for (let i = 0; i < 20; i++) {
+          for (let tries = 0; tries < 25; tries++) {
+            const r = 3 + Math.floor(Math.random() * (wRows - 6));
+            const c = 3 + Math.floor(Math.random() * (wCols - 6));
+            if (terrain[r][c] === 1) {
+              const team = i % 2 === 0 ? 'blue' : 'red';
+              units.push({
+                kind: 'naval',
+                team,
+                icon: '🚢',
+                r: r + 0.5,
+                c: c + 0.5,
+                targetR: r + 0.5,
+                targetC: c + 0.5,
+                speed: 0.42 + Math.random() * 0.25,
+                anchoredUntil: Math.random() < 0.35 ? performance.now() + 2500 + Math.random() * 4000 : 0,
+                fireCooldown: Math.random() * 2500
+              });
+              break;
+            }
+          }
+        }
+
+        const airIcons = ['✈️', '🚁', '🛸'];
+        for (let i = 0; i < 10; i++) {
+          const team = i % 2 === 0 ? 'blue' : 'red';
+          const ang = Math.random() * Math.PI * 2;
+          const spd = 1.1 + Math.random() * 0.8;
+          units.push({
+            kind: 'air',
+            team,
+            icon: airIcons[i % airIcons.length],
+            r: 4 + Math.random() * (wRows - 8),
+            c: 4 + Math.random() * (wCols - 8),
+            vr: Math.sin(ang) * spd,
+            vc: Math.cos(ang) * spd,
+            fireCooldown: Math.random() * 2400
+          });
+        }
+
+        this.screensaverWorld = {
+          rows: wRows,
+          cols: wCols,
+          terrain,
+          units,
+          fx: [],
+          shots: []
+        };
+      }
+
+      renderScreensaverBattlefield(ctx, W, H, now, tSec, dt) {
+        if (!this.screensaverWorld || now > this.screensaverNextMap) {
+          this.generateScreensaverWorld();
+          this.screensaverNextMap = now + 22000;
+        }
+        const world = this.screensaverWorld;
+        const theme = BOARD_THEMES[document.getElementById('optBoardTheme')?.value || 'forest'];
+
+        const tile = 38 + Math.sin(tSec * 0.22) * 11;
+        const centerCol = world.cols * 0.5 + Math.sin(tSec * 0.14) * (world.cols * 0.24) + Math.cos(tSec * 0.08) * 3;
+        const centerRow = world.rows * 0.5 + Math.cos(tSec * 0.12) * (world.rows * 0.24) + Math.sin(tSec * 0.09) * 3;
+        const ox = W * 0.5 - centerCol * tile;
+        const oy = H * 0.5 - centerRow * tile;
+
+        const minC = Math.max(0, Math.floor(-ox / tile) - 1);
+        const maxC = Math.min(world.cols - 1, Math.ceil((W - ox) / tile) + 1);
+        const minR = Math.max(0, Math.floor(-oy / tile) - 1);
+        const maxR = Math.min(world.rows - 1, Math.ceil((H - oy) / tile) + 1);
+
+        for (let r = minR; r <= maxR; r++) {
+          for (let c = minC; c <= maxC; c++) {
+            const x = ox + c * tile;
+            const y = oy + r * tile;
+            const terr = world.terrain[r][c];
+            if (terr === 1) {
+              ctx.fillStyle = theme.sea;
+              ctx.fillRect(x, y, tile + 0.6, tile + 0.6);
+              if (((r + c) % 3) === 0) {
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.06)';
+                ctx.fillRect(x + 4 + Math.sin(tSec * 2 + r) * 3, y + tile * 0.45, tile * 0.5, 2);
+              }
+            } else if (terr === 2 || terr === 3) {
+              ctx.fillStyle = theme.sea;
+              ctx.fillRect(x, y, tile + 0.6, tile + 0.6);
+              ctx.fillStyle = theme.bridge;
+              if (terr === 2) {
+                ctx.fillRect(x, y + tile * 0.2, tile + 0.6, tile * 0.6);
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 1.2;
+                ctx.strokeRect(x + 1, y + tile * 0.2, tile - 2, tile * 0.6);
+              } else {
+                ctx.fillRect(x + tile * 0.2, y, tile * 0.6, tile + 0.6);
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 1.2;
+                ctx.strokeRect(x + tile * 0.2, y + 1, tile * 0.6, tile - 2);
+              }
+            } else {
+              ctx.fillStyle = (r + c) % 2 === 0 ? theme.land1 : theme.land2;
+              ctx.fillRect(x, y, tile + 0.6, tile + 0.6);
+            }
+          }
+        }
+
+        for (const u of world.units) {
+          if (u.kind === 'air') continue;
+
+          if (!((u.kind === 'naval' && now < u.anchoredUntil) || (u.kind === 'land' && now < u.waitUntil))) {
+            const dr = u.targetR - u.r;
+            const dc = u.targetC - u.c;
+            const dist = Math.hypot(dr, dc);
+            if (dist < 0.06) {
+              u.r = u.targetR;
+              u.c = u.targetC;
+              if (u.kind === 'naval' && Math.random() < 0.28) {
+                u.anchoredUntil = now + 2200 + Math.random() * 3500;
+              } else if (u.kind === 'land' && Math.random() < 0.32) {
+                u.waitUntil = now + 900 + Math.random() * 1600;
+              }
+              const orthoDirs = [[-1, 0], [1, 0], [0, -1], [0, 1]].sort(() => Math.random() - 0.5);
+              const curR = Math.floor(u.r);
+              const curC = Math.floor(u.c);
+              for (const [sr, sc] of orthoDirs) {
+                const maxSteps = u.kind === 'naval' ? 3 : 2;
+                let validSteps = 0;
+                for (let s = 1; s <= maxSteps; s++) {
+                  const nr = curR + sr * s;
+                  const nc = curC + sc * s;
+                  if (nr < 2 || nr >= world.rows - 2 || nc < 2 || nc >= world.cols - 2) break;
+                  const tVal = world.terrain[nr][nc];
+                  const passable = (u.kind === 'land' && tVal !== 1) || (u.kind === 'naval' && tVal !== 0);
+                  if (!passable) break;
+                  validSteps = s;
+                }
+                if (validSteps > 0) {
+                  const chosenStep = 1 + Math.floor(Math.random() * validSteps);
+                  u.targetR = curR + sr * chosenStep + 0.5;
+                  u.targetC = curC + sc * chosenStep + 0.5;
+                  break;
+                }
+              }
+            } else {
+              u.r += (dr / dist) * u.speed * dt;
+              u.c += (dc / dist) * u.speed * dt;
+            }
+          }
+
+          if (now > u.fireCooldown) {
+            for (const other of world.units) {
+              if (other.team !== u.team && Math.hypot(other.r - u.r, other.c - u.c) < 3.6) {
+                u.fireCooldown = now + 1800 + Math.random() * 2200;
+                world.shots.push({
+                  r1: u.r, c1: u.c, r2: other.r, c2: other.c,
+                  color: u.team === 'blue' ? '#38bdf8' : '#fb7185',
+                  start: now, dur: 260
+                });
+                world.fx.push({
+                  r: other.r, c: other.c,
+                  color: '#f97316',
+                  start: now + 180, dur: 550
+                });
+                break;
+              }
+            }
+          }
+
+          const ux = ox + u.c * tile;
+          const uy = oy + u.r * tile;
+          if (ux < -50 || ux > W + 50 || uy < -50 || uy > H + 50) continue;
+
+          if (u.kind === 'naval') {
+            ctx.strokeStyle = now < u.anchoredUntil ? 'rgba(250, 204, 21, 0.45)' : 'rgba(125, 211, 252, 0.35)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(ux, uy, tile * 0.44 + Math.sin(tSec * 3 + u.c) * 2, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          ctx.beginPath();
+          ctx.arc(ux, uy, tile * 0.36, 0, Math.PI * 2);
+          ctx.fillStyle = u.team === 'blue' ? '#1e3a8a' : '#7f1d1d';
+          ctx.fill();
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = u.team === 'blue' ? '#38bdf8' : '#f87171';
+          ctx.stroke();
+
+          ctx.font = `${Math.floor(tile * 0.4)}px Heebo`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(u.icon, ux, uy);
+        }
+
+        for (let i = world.shots.length - 1; i >= 0; i--) {
+          const s = world.shots[i];
+          const p = (now - s.start) / s.dur;
+          if (p >= 1) { world.shots.splice(i, 1); continue; }
+          const x1 = ox + s.c1 * tile, y1 = oy + s.r1 * tile;
+          const x2 = ox + s.c2 * tile, y2 = oy + s.r2 * tile;
+          const curX = x1 + (x2 - x1) * p;
+          const curY = y1 + (y2 - y1) * p;
+          ctx.strokeStyle = s.color;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(x1 + (x2 - x1) * Math.max(0, p - 0.35), y1 + (y2 - y1) * Math.max(0, p - 0.35));
+          ctx.lineTo(curX, curY);
+          ctx.stroke();
+        }
+
+        for (let i = world.fx.length - 1; i >= 0; i--) {
+          const f = world.fx[i];
+          if (now < f.start) continue;
+          const p = (now - f.start) / f.dur;
+          if (p >= 1) { world.fx.splice(i, 1); continue; }
+          const fx = ox + f.c * tile, fy = oy + f.r * tile;
+          ctx.save();
+          ctx.globalAlpha = 1 - p;
+          ctx.strokeStyle = f.color;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(fx, fy, tile * (0.2 + p * 1.15), 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = '#fde047';
+          ctx.beginPath();
+          ctx.arc(fx, fy, tile * 0.25 * (1 - p), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        for (const u of world.units) {
+          if (u.kind !== 'air') continue;
+          u.r += u.vr * dt;
+          u.c += u.vc * dt;
+          if (u.r < 2 || u.r > world.rows - 2) u.vr *= -1;
+          if (u.c < 2 || u.c > world.cols - 2) u.vc *= -1;
+
+          if (now > u.fireCooldown && Math.random() < 0.03) {
+            u.fireCooldown = now + 2600;
+            world.fx.push({ r: u.r + 0.6, c: u.c + 0.6, color: '#ef4444', start: now, dur: 600 });
+          }
+
+          const ax = ox + u.c * tile;
+          const ay = oy + u.r * tile;
+          if (ax < -70 || ax > W + 70 || ay < -70 || ay > H + 70) continue;
+
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.32)';
+          ctx.beginPath();
+          ctx.arc(ax + tile * 0.35, ay + tile * 0.45, tile * 0.28, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = u.team === 'blue' ? 'rgba(56, 189, 248, 0.35)' : 'rgba(248, 113, 113, 0.35)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(ax - u.vc * 10, ay - u.vr * 10);
+          ctx.lineTo(ax, ay);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(ax, ay, tile * 0.42, 0, Math.PI * 2);
+          ctx.fillStyle = u.team === 'blue' ? '#0c4a6e' : '#7f1d1d';
+          ctx.fill();
+          ctx.lineWidth = 2.2;
+          ctx.strokeStyle = u.team === 'blue' ? '#7dd3fc' : '#fca5a5';
+          ctx.stroke();
+
+          ctx.font = `${Math.floor(tile * 0.48)}px Heebo`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(u.icon, ax, ay);
+        }
+      }
+
+      getBoardMetrics() {
+        const baseTile = Math.min((this.canvas.width - 54) / this.cols, (this.canvas.height - 175) / this.rows);
+        const tile = Math.max(20, baseTile) * this.cam.zoom;
+        const w = tile * this.cols;
+        const h = tile * this.rows;
+        const ox = (this.canvas.width - w) / 2 + this.cam.x;
+        const oy = (this.canvas.height - h) / 2 + this.cam.y;
+        return { tile, w, h, ox, oy };
+      }
+
+      resetCamera() {
+        this.cam = { x: 0, y: 0, zoom: 1 };
+      }
+
+      renderLoop(now) {
+        const ctx = this.ctx;
+        const W = this.canvas.width;
+        const H = this.canvas.height;
+        const tSec = now * 0.001;
+        const dt = Math.min(0.05, Math.max(0.008, (now - (this.lastFrameTime || now)) * 0.001));
+        this.lastFrameTime = now;
+
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = '#061324';
+        ctx.fillRect(0, 0, W, H);
+
+        if (this.phase === 'menu' || this.phase === 'splash') {
+          this.renderScreensaverBattlefield(ctx, W, H, now, tSec, dt);
+
+          if (this.phase === 'splash') {
+            const theta = 2.4 * tSec + 0.65 * Math.sin(3.1 * tSec);
+            ctx.save();
+            ctx.translate(W / 2, H * 0.16);
+            ctx.rotate(theta);
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.arc(0, 0, 28, 0, Math.PI * 1.45);
+            ctx.stroke();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(0, 0, 20, Math.PI, Math.PI * 2.3);
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          requestAnimationFrame((t) => this.renderLoop(t));
+          return;
+        }
+
+        const theme = BOARD_THEMES[document.getElementById('optBoardTheme')?.value || 'forest'];
+        const tokenRatio = parseFloat(document.getElementById('optTokenScale')?.value || '0.39');
+        const { tile, w, h, ox, oy } = this.getBoardMetrics();
+
+        // המשך שטח קרב תפאורתי סביב גבולות הגזרה
+        const ambMinC = Math.floor(-ox / tile) - 2;
+        const ambMaxC = Math.ceil((W - ox) / tile) + 2;
+        const ambMinR = Math.floor(-oy / tile) - 2;
+        const ambMaxR = Math.ceil((H - oy) / tile) + 2;
+
+        for (let r = ambMinR; r <= ambMaxR; r++) {
+          for (let c = ambMinC; c <= ambMaxC; c++) {
+            if (r >= 0 && r < this.rows && c >= 0 && c < this.cols) continue;
+            const x = ox + c * tile;
+            const y = oy + r * tile;
+            const nVal = Math.sin(r * 0.24 + 1.3) + Math.cos(c * 0.24 + 0.7) + Math.sin((r + c) * 0.14) * 0.5;
+            const isSea = nVal <= -0.15;
+            const isHBridge = isSea && (Math.abs(r) % 9 === 4) && (Math.abs(c) % 6 < 3);
+            const isVBridge = isSea && !isHBridge && (Math.abs(c) % 9 === 4) && (Math.abs(r) % 6 < 3);
+
+            if (isSea) {
+              ctx.fillStyle = theme.sea;
+              ctx.fillRect(x, y, tile + 0.6, tile + 0.6);
+              if (isHBridge) {
+                ctx.fillStyle = theme.bridge;
+                ctx.fillRect(x, y + tile * 0.22, tile + 0.6, tile * 0.56);
+              } else if (isVBridge) {
+                ctx.fillStyle = theme.bridge;
+                ctx.fillRect(x + tile * 0.22, y, tile * 0.56, tile + 0.6);
+              }
+            } else {
+              ctx.fillStyle = Math.abs(r + c) % 2 === 0 ? theme.land1 : theme.land2;
+              ctx.fillRect(x, y, tile + 0.6, tile + 0.6);
+            }
+          }
+        }
+        ctx.fillStyle = 'rgba(3, 8, 18, 0.56)';
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(ox - 24, oy - 24, w + 32, h + 32);
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(ox - 24, oy - 24, w + 32, h + 32);
+
+        if (document.getElementById('optCoords')?.checked !== false) {
+          ctx.fillStyle = 'rgba(148, 163, 184, 0.58)';
+          ctx.font = `bold ${Math.max(10, Math.floor(tile * 0.27))}px Heebo`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+          for (let c = 0; c < this.cols; c++) {
+            const lbl = c < 26 ? letters[c] : `A${letters[c - 26] || c}`;
+            ctx.fillText(lbl, ox + c * tile + tile / 2, oy - 12);
+          }
+          for (let r = 0; r < this.rows; r++) {
+            ctx.fillText(String(this.rows - r), ox - 12, oy + r * tile + tile / 2);
+          }
+        }
+
+        for (let r = 0; r < this.rows; r++) {
+          for (let c = 0; c < this.cols; c++) {
+            const x = ox + c * tile;
+            const y = oy + r * tile;
+            const terr = this.terrain[r][c];
+            const grain = (seededHash(r, c) - 0.5) * 10;
+
+            if (terr === 1) {
+              ctx.fillStyle = theme.sea;
+              ctx.fillRect(x + 1, y + 1, tile - 2, tile - 2);
+            } else if (terr === 2 || terr === 3) {
+              ctx.fillStyle = theme.sea;
+              ctx.fillRect(x + 1, y + 1, tile - 2, tile - 2);
+              ctx.fillStyle = theme.bridge;
+              if (terr === 2) {
+                ctx.fillRect(x + 1, y + tile * 0.2, tile - 2, tile * 0.6);
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(x + 2, y + tile * 0.2, tile - 4, tile * 0.6);
+              } else {
+                ctx.fillRect(x + tile * 0.2, y + 1, tile * 0.6, tile - 2);
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(x + tile * 0.2, y + 2, tile * 0.6, tile - 4);
+              }
+            } else {
+              ctx.fillStyle = (r + c) % 2 === 0 ? theme.land1 : theme.land2;
+              ctx.fillRect(x + 1, y + 1, tile - 2, tile - 2);
+              if (grain > 2) {
+                ctx.fillStyle = 'rgba(255,255,255,0.03)';
+                ctx.fillRect(x + 4, y + 4, tile - 8, tile - 8);
+              }
+            }
+
+            if (this.phase === 'deploy') {
+              if (!this.blueTC && r >= Math.floor(this.rows / 2) && terr === 0) {
+                ctx.fillStyle = 'rgba(250, 204, 21, 0.16)';
+                ctx.fillRect(x + 2, y + 2, tile - 4, tile - 4);
+              } else if (this.blueTC && this.isInsideTcCircle(r, c)) {
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
+                ctx.fillRect(x + 2, y + 2, tile - 4, tile - 4);
+              }
+            }
+
+            ['blue', 'red'].forEach(tKey => {
+              const tr = this.lastMoveTrails[tKey];
+              if (tr && tr.cells && tr.cells.some(pt => pt.r === r && pt.c === c)) {
+                const isBlueTrail = tKey === 'blue';
+                ctx.fillStyle = isBlueTrail ? 'rgba(56, 189, 248, 0.22)' : 'rgba(244, 63, 94, 0.22)';
+                ctx.fillRect(x + 2, y + 2, tile - 4, tile - 4);
+                ctx.strokeStyle = isBlueTrail ? 'rgba(56, 189, 248, 0.6)' : 'rgba(244, 63, 94, 0.6)';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(x + 2, y + 2, tile - 4, tile - 4);
+              }
+            });
+
+            const mv = this.validMoves.find(m => m.r === r && m.c === c);
+            if (mv) {
+              const isCargoAction = mv.isLoad || mv.isPickup || mv.isUnload;
+              ctx.fillStyle = mv.isAttack ? 'rgba(239, 68, 68, 0.36)' : (mv.isUnload ? 'rgba(74, 222, 128, 0.34)' : (isCargoAction ? 'rgba(250, 204, 21, 0.34)' : 'rgba(56, 189, 248, 0.32)'));
+              ctx.fillRect(x + 2, y + 2, tile - 4, tile - 4);
+              ctx.strokeStyle = mv.isAttack ? '#ef4444' : (mv.isUnload ? '#4ade80' : (isCargoAction ? '#facc15' : '#38bdf8'));
+              ctx.lineWidth = 2;
+              ctx.strokeRect(x + 2, y + 2, tile - 4, tile - 4);
+              if (mv.isUnload || mv.isLoad || mv.isPickup) {
+                ctx.font = `${Math.max(12, Math.floor(tile * 0.36))}px Heebo`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(mv.isUnload ? '🪂' : '📦', x + tile / 2, y + tile / 2);
+              }
+            }
+
+            const navP = this.navalGrid[r][c];
+            const landP = this.landGrid[r][c];
+
+            if (navP) this.drawToken(ctx, navP, x, y, tile, tokenRatio, r, c, 'naval', Boolean(landP), tSec);
+            if (landP) this.drawToken(ctx, landP, x, y, tile, tokenRatio, r, c, 'land', false, tSec);
+
+            if (navP && landP) {
+              ctx.fillStyle = '#facc15';
+              ctx.font = `900 ${Math.max(12, Math.floor(tile * 0.34))}px Heebo`;
+              ctx.textAlign = 'center';
+              ctx.fillText('⇅', x + tile * 0.82, y + tile * 0.22);
+            }
+          }
+        }
+
+        ['blue', 'red'].forEach(tKey => {
+          const tr = this.lastMoveTrails[tKey];
+          if (tr && (tr.fromR !== tr.toR || tr.fromC !== tr.toC)) {
+            const { fromR, fromC, toR, toC } = tr;
+            const x1 = ox + fromC * tile + tile / 2;
+            const y1 = oy + fromR * tile + tile / 2;
+            const x2 = ox + toC * tile + tile / 2;
+            const y2 = oy + toR * tile + tile / 2;
+            const strokeCol = tKey === 'blue' ? 'rgba(56, 189, 248, 0.85)' : 'rgba(251, 113, 133, 0.85)';
+
+            ctx.save();
+            ctx.strokeStyle = strokeCol;
+            ctx.lineWidth = Math.max(3, tile * 0.09);
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = strokeCol;
+            ctx.beginPath();
+            ctx.arc(x1, y1, Math.max(4, tile * 0.11), 0, Math.PI * 2);
+            ctx.fill();
+
+            const ang = Math.atan2(y2 - y1, x2 - x1);
+            const headLen = Math.max(9, tile * 0.24);
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - headLen * Math.cos(ang - 0.45), y2 - headLen * Math.sin(ang - 0.45));
+            ctx.lineTo(x2 - headLen * Math.cos(ang + 0.45), y2 - headLen * Math.sin(ang + 0.45));
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
+        });
+
+        if (this.animMove) {
+          const am = this.animMove;
+          const rawT = Math.min(1, (now - am.startTime) / am.dur);
+          const easeT = easeInOutCubic(rawT);
+          const curR = am.fromR + (am.toR - am.fromR) * easeT;
+          const curC = am.fromC + (am.toC - am.fromC) * easeT;
+          const ax = ox + curC * tile;
+          const ay = oy + curR * tile;
+
+          ctx.save();
+          if (am.piece.air) {
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.65)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(ax + tile / 2, ay + tile / 2, tile * (0.45 + Math.sin(rawT * Math.PI) * 0.2), 0, Math.PI * 2);
+            ctx.stroke();
+          } else if (am.piece.naval) {
+            ctx.strokeStyle = 'rgba(125, 211, 252, 0.7)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(ax + tile / 2, ay + tile / 2, tile * (0.3 + rawT * 0.35), 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          const lift = am.piece.air ? -Math.sin(rawT * Math.PI) * tile * 0.22 : -Math.sin(rawT * Math.PI) * tile * 0.08;
+          this.drawToken(ctx, am.piece, ax, ay + lift, tile, tokenRatio * (am.piece.air ? 1.12 : 1.04), -1, -1, 'anim', false, tSec);
+          ctx.restore();
+
+          if (rawT >= 1) {
+            const doneFn = am.onDone;
+            this.animMove = null;
+            if (doneFn) doneFn();
+          }
+        }
+
+        for (let i = this.fxEffects.length - 1; i >= 0; i--) {
+          const fx = this.fxEffects[i];
+          const p = (now - fx.startTime) / fx.dur;
+          if (p >= 1) {
+            this.fxEffects.splice(i, 1);
+            continue;
+          }
+          const fxX = ox + fx.c * tile + tile / 2;
+          const fxY = oy + fx.r * tile + tile / 2;
+          ctx.save();
+          ctx.globalAlpha = 1 - p;
+          ctx.strokeStyle = fx.color;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(fxX, fxY, tile * (0.25 + p * (fx.kind === 'radar' ? 1.8 : 1.1)), 0, Math.PI * 2);
+          ctx.stroke();
+          fx.particles.forEach(pt => {
+            ctx.fillStyle = fx.color;
+            ctx.beginPath();
+            ctx.arc(fxX + pt.vx * p * tile * 1.1, fxY + pt.vy * p * tile * 1.1, 3 * (1 - p), 0, Math.PI * 2);
+            ctx.fill();
+          });
+          ctx.restore();
+        }
+
+        requestAnimationFrame((t) => this.renderLoop(t));
+      }
+
+      drawToken(ctx, p, x, y, tile, tokenRatio, r, c, layer, shiftedUnder, tSec = 0) {
+        const offset = shiftedUnder ? -tile * 0.14 : (layer === 'naval' && r >= 0 && this.landGrid[r]?.[c] ? tile * 0.14 : 0);
+        const idleBob = p.air ? Math.sin(tSec * 4 + r + c) * 2.5 : (p.naval ? Math.sin(tSec * 3 + c) * 1.5 : 0);
+        const cx = x + tile / 2 + offset;
+        const cy = y + tile / 2 + offset + idleBob;
+        const rad = tile * tokenRatio * (shiftedUnder ? 0.82 : 1);
+        const isSel = this.selected && this.selected.r === r && this.selected.c === c && this.selected.layer === layer;
+
+        if (isSel) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(250, 204, 21, 0.55)';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(cx, cy, rad + 4 + Math.sin(tSec * 6) * 2, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+        ctx.fillStyle = p.team === 'blue' ? '#1e3a8a' : '#7f1d1d';
+        ctx.fill();
+        ctx.lineWidth = isSel ? 3.5 : 2;
+        ctx.strokeStyle = isSel ? '#facc15' : (p.team === 'blue' ? '#38bdf8' : '#f87171');
+        ctx.stroke();
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        if (p.team === 'blue' || p.revealed || this.isGameOver) {
+          ctx.font = `${Math.floor(tile * 0.42)}px Heebo`;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(p.icon, cx, cy);
+          if (p.rank > 0 && p.rank < 11) {
+            ctx.font = `bold ${Math.max(9, Math.floor(tile * 0.21))}px Heebo`;
+            ctx.fillStyle = '#fde047';
+            ctx.fillText(String(p.rank), cx + rad * 0.65, cy + rad * 0.65);
+          }
+          if (p.cargo && p.cargo.length > 0) {
+            ctx.font = `bold ${Math.max(9, Math.floor(tile * 0.22))}px Heebo`;
+            ctx.fillStyle = '#4ade80';
+            ctx.fillText(`📦${p.cargo.length}`, cx - rad * 0.6, cy - rad * 0.65);
+          }
+          if (p.team === 'blue' && !p.revealed && p.fiftyPercentInfo && !this.isGameOver) {
+            ctx.font = `bold ${Math.max(8, Math.floor(tile * 0.18))}px Heebo`;
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillText(`❓50%`, cx, cy - rad * 0.85);
+          }
+        } else {
+          ctx.font = `900 ${Math.floor(tile * 0.44)}px Heebo`;
+          ctx.fillStyle = '#fca5a5';
+          ctx.fillText('?', cx, cy + 1);
+          if (p.fiftyPercentInfo) {
+            ctx.font = `bold ${Math.max(8, Math.floor(tile * 0.18))}px Heebo`;
+            ctx.fillStyle = '#fde047';
+            ctx.fillText(`50% ${p.fiftyPercentInfo}`, cx, cy + rad * 0.82);
+          }
+        }
+      }
+
+      renderCustomPreview() {
+        const c = document.getElementById('customPreviewCanvas');
+        if (!c) return;
+        const ctx = c.getContext('2d');
+        c.width = c.clientWidth || 300;
+        c.height = c.clientHeight || 128;
+        const rows = Math.min(99, Math.max(8, Number(document.getElementById('customRows')?.value) || 12));
+        const cols = Math.min(99, Math.max(8, Number(document.getElementById('customCols')?.value) || 10));
+        const preset = document.getElementById('customMapPreset')?.value || 'classic_bridges';
+        const grid = this.customTerrainOverride || this.buildTerrain(rows, cols, preset);
+        const rLen = grid.length;
+        const cLen = grid[0].length;
+        const tw = c.width / cLen;
+        const th = c.height / rLen;
+        for (let r = 0; r < rLen; r++) {
+          for (let col = 0; col < cLen; col++) {
+            const v = grid[r][col];
+            ctx.fillStyle = v === 1 ? '#0f294a' : (v === 2 || v === 3 ? '#b45309' : '#1e3a2f');
+            ctx.fillRect(col * tw, r * th, tw - 0.5, th - 0.5);
+          }
+        }
+      }
+
+      openPainterModal(target = 'room') {
+        this.painterTarget = target;
+        document.getElementById('painterModal').classList.remove('hidden');
+        if (target === 'custom') {
+          const rows = Math.min(99, Math.max(8, Number(document.getElementById('customRows')?.value) || 12));
+          const cols = Math.min(99, Math.max(8, Number(document.getElementById('customCols')?.value) || 10));
+          const preset = document.getElementById('customMapPreset')?.value || 'classic_bridges';
+          this.painter.grid = this.customTerrainOverride
+            ? this.customTerrainOverride.map(r => [...r])
+            : this.buildTerrain(rows, cols, preset);
+        } else {
+          this.painter.grid = this.roomState.customTerrain.map(r => [...r]);
+        }
+        this.painter.zoom = 1;
+        this.painter.panX = 0;
+        this.painter.panY = 0;
+        this.drawPainterCanvas();
+      }
+
+      drawPainterCanvas() {
+        const c = document.getElementById('painterCanvas');
+        const ctx = c.getContext('2d');
+        c.width = c.clientWidth || 340;
+        c.height = c.clientHeight || 360;
+        ctx.fillStyle = '#070d19';
+        ctx.fillRect(0, 0, c.width, c.height);
+
+        const rows = this.painter.grid.length;
+        const cols = this.painter.grid[0].length;
+        const tile = Math.min((c.width - 24) / cols, (c.height - 24) / rows) * this.painter.zoom;
+        const ox = (c.width - tile * cols) / 2 + this.painter.panX;
+        const oy = (c.height - tile * rows) / 2 + this.painter.panY;
+
+        for (let r = 0; r < rows; r++) {
+          for (let col = 0; col < cols; col++) {
+            const v = this.painter.grid[r][col];
+            ctx.fillStyle = v === 1 ? '#0f294a' : (v === 2 || v === 3 ? '#b45309' : '#1e3a2f');
+            ctx.fillRect(ox + col * tile + 1, oy + r * tile + 1, tile - 2, tile - 2);
+          }
+        }
+      }
+
+      paintAtPoint(clientX, clientY) {
+        if (this.painter.brush === -1) return;
+        const c = document.getElementById('painterCanvas');
+        const rect = c.getBoundingClientRect();
+        const px = clientX - rect.left;
+        const py = clientY - rect.top;
+        const rows = this.painter.grid.length;
+        const cols = this.painter.grid[0].length;
+        const tile = Math.min((c.width - 24) / cols, (c.height - 24) / rows) * this.painter.zoom;
+        const ox = (c.width - tile * cols) / 2 + this.painter.panX;
+        const oy = (c.height - tile * rows) / 2 + this.painter.panY;
+
+        const cc = Math.floor((px - ox) / tile);
+        const rr = Math.floor((py - oy) / tile);
+        const half = Math.floor(this.painter.size / 2);
+        for (let dr = -half; dr < this.painter.size - half; dr++) {
+          for (let dc = -half; dc < this.painter.size - half; dc++) {
+            if (this.painter.grid[rr + dr] && this.painter.grid[rr + dr][cc + dc] !== undefined) {
+              this.painter.grid[rr + dr][cc + dc] = this.painter.brush;
+            }
+          }
+        }
+        this.drawPainterCanvas();
+      }
+
+      /* ================= 8. חיבור כל האירועים ================= */
+      bindEvents() {
+        this.onClick('splashScreen', () => this.handleSplashTap());
+
+        this.onClick('btnSaveNickname', () => {
+          const val = document.getElementById('nicknameInput').value.trim();
+          this.nickname = val || 'מפקד טקטי';
+          localStorage.setItem('attacktik_nick', this.nickname);
+          document.getElementById('nicknameModal').classList.add('hidden');
+          this.openMainMenuWithGuard();
+        });
+        this.onClick('btnEditNickname', () => {
+          document.getElementById('nicknameInput').value = this.nickname;
+          document.getElementById('nicknameModal').classList.remove('hidden');
+        });
+        this.onClick('btnResumeAutoSave', () => this.resumeAutoSave());
+
+        document.getElementById('mainMenu').addEventListener('pointerdown', (e) => {
+          const card = document.getElementById('mainMenuCard');
+          if (card.classList.contains('menu-screensaver')) {
+            e.preventDefault();
+            e.stopPropagation();
+            card.classList.remove('menu-screensaver');
+            card.style.pointerEvents = 'none';
+            setTimeout(() => {
+              card.style.pointerEvents = 'auto';
+              this.resetScreensaverTimer();
+            }, 450);
+          } else {
+            this.resetScreensaverTimer();
+          }
+        }, true);
+
+        this.makeDraggableCard('selectedUnitCard', 'sucDragHandle');
+        this.makeDraggableCard('tutorialBanner', 'tutDragHandle');
+
+        this.onClick('btnMenuOnline', () => this.openOnlineLobby());
+        this.onClick('btnCloseOnlineLobby', () => this.openMainMenuWithGuard());
+
+        this.onClick('btnMenuCampaign', () => {
+          this.hideAllOverlays();
+          const grid = document.getElementById('campaignGrid');
+          grid.innerHTML = Array.from({ length: 50 }, (_, i) => {
+            const lvl = i + 1;
+            const locked = lvl > this.unlockedCampaign;
+            const isChallenge = (lvl % 5 === 0);
+            return `<button data-lvl="${lvl}" class="camp-lvl-btn p-2.5 rounded-xl font-black text-xs border ${locked ? 'bg-slate-900 border-slate-800 text-slate-600' : (isChallenge ? 'bg-amber-600/30 border-amber-400 text-amber-200' : 'bg-sky-600/30 border-sky-400/50 text-white')}">${locked ? '🔒' : (isChallenge ? `⏱️${lvl}` : lvl)}</button>`;
+          }).join('');
+          grid.querySelectorAll('.camp-lvl-btn').forEach(b => {
+            b.addEventListener('click', () => {
+              const lvl = Number(b.dataset.lvl);
+              if (lvl <= this.unlockedCampaign) this.startCampaignStage(lvl);
+            });
+          });
+          document.getElementById('campaignScreen').classList.remove('hidden');
+        });
+        this.onClick('btnCloseCampaign', () => this.openMainMenuWithGuard());
+
+        this.onClick('btnMenuCustom', () => {
+          this.hideAllOverlays();
+          document.getElementById('customScreen').classList.remove('hidden');
+          this.renderCustomPreview();
+        });
+        this.onClick('btnMenuMapEditor', () => {
+          this.hideAllOverlays();
+          document.getElementById('customScreen').classList.remove('hidden');
+          this.renderCustomPreview();
+          this.openPainterModal('custom');
+        });
+        this.onClick('btnOpenCustomPainter', () => this.openPainterModal('custom'));
+        ['customMapPreset', 'customRows', 'customCols'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.addEventListener('change', () => {
+            this.customTerrainOverride = null;
+            this.renderCustomPreview();
+          });
+        });
+        this.onClick('btnCloseCustom', () => this.openMainMenuWithGuard());
+        this.onClick('btnStartCustomBattle', () => {
+          const r = Math.min(99, Math.max(8, Number(document.getElementById('customRows').value) || 12));
+          const c = Math.min(99, Math.max(8, Number(document.getElementById('customCols').value) || 10));
+          const preset = document.getElementById('customMapPreset').value;
+          const tcRad = Number(document.getElementById('customTcRadius').value) || 3;
+          const deployMode = document.getElementById('customDeployMode').value;
+          this.allianceMode = document.getElementById('customModeSelect').value === 'alliance_2v2';
+          this.aiDifficulty = document.getElementById('customAiDiff').value;
+
+          if (deployMode === 'tc_setup') {
+            this.startTcDeployment(r, c, preset, this.customTerrainOverride, tcRad, true, 'full');
+          } else {
+            this.hideAllOverlays();
+            this.phase = 'battle';
+            this.isCampaign = false;
+            this.useTurnTimer = true;
+            this.setupBoardData(r, c, preset, this.customTerrainOverride);
+            this.currentTurn = 'blue';
+            this.populateDemoBattle(6);
+            document.getElementById('battleHud').classList.remove('hidden');
+            document.getElementById('deployPanel').classList.add('hidden');
+            document.getElementById('tutorialBanner').classList.add('hidden');
+            document.getElementById('sideObjectiveBanner').classList.add('hidden');
+            document.getElementById('battleTimerWrapper').classList.remove('hidden');
+            this.updateTurnHud();
+            this.startTurnTimer();
+          }
+        });
+
+        this.onClick('btnMenuSettings', () => {
+          this.hideAllOverlays();
+          document.getElementById('settingsScreen').classList.remove('hidden');
+        });
+        this.onClick('btnCloseSettings', () => this.openMainMenuWithGuard());
+        this.onClick('btnResetProgress', () => {
+          localStorage.removeItem('attacktik_camp');
+          localStorage.removeItem('attacktik_autosave');
+          localStorage.removeItem('attacktik_saved_rooms');
+          this.unlockedCampaign = 1;
+          this.savedRooms = [];
+          this.openMainMenuWithGuard();
+        });
+
+        this.onClick('btnCreateOnlineRoom', () => {
+          const rName = document.getElementById('newRoomName').value.trim() || `חדר של ${this.nickname}`;
+          const rPass = document.getElementById('newRoomPass').value.trim();
+          const newId = this.myPeerId || ('room_' + Date.now());
+          this.currentRoomId = newId;
+          const roomObj = { id: newId, name: rName, host: this.nickname, pass: rPass, isAdmin: true, playersCount: 1 };
+          this.activeRooms.push(roomObj);
+          if (this.roomChannel) this.roomChannel.postMessage({ type: 'ROOM_ANNOUNCE', room: roomObj });
+          document.getElementById('newRoomName').value = '';
+          document.getElementById('newRoomPass').value = '';
+          this.enterOnlineRoom(rName, rPass, true);
+        });
+        this.onClick('btnJoinByCode', () => {
+          const code = document.getElementById('joinByCodeInput')?.value;
+          if (code && code.trim()) this.connectToOnlineCode(code);
+        });
+        this.onClick('btnCopyRoomInvite', () => {
+          const code = this.myPeerId || this.currentRoomId || '';
+          const baseUrl = window.location.href.split('?')[0];
+          const shareText = code ? `${baseUrl}?room=${encodeURIComponent(code)}` : baseUrl;
+          const tmp = document.createElement('textarea');
+          tmp.value = shareText;
+          document.body.appendChild(tmp);
+          tmp.select();
+          try { document.execCommand('copy'); } catch (e) {}
+          document.body.removeChild(tmp);
+          this.roomState.chat.push({ sender: 'מערכת', text: `📋 קישור/קוד הזמנה הועתק: ${shareText}` });
+          this.renderRoomChat();
+        });
+        document.getElementById('roomMapPreset').addEventListener('change', (e) => {
+          const val = e.target.value;
+          this.roomState.preset = val;
+          if (val !== 'custom_drawn') this.roomState.customTerrain = this.buildTerrain(this.roomState.rows, this.roomState.cols, val);
+          this.renderRoomPreview();
+        });
+        ['roomRows', 'roomCols'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.addEventListener('change', () => {
+            this.roomState.rows = Math.min(99, Math.max(8, Number(document.getElementById('roomRows').value) || 12));
+            this.roomState.cols = Math.min(99, Math.max(8, Number(document.getElementById('roomCols').value) || 10));
+            document.getElementById('roomRows').value = this.roomState.rows;
+            document.getElementById('roomCols').value = this.roomState.cols;
+            const preset = this.roomState.preset === 'custom_drawn' ? 'classic_bridges' : this.roomState.preset;
+            this.roomState.customTerrain = this.buildTerrain(this.roomState.rows, this.roomState.cols, preset);
+            this.renderRoomPreview();
+          });
+        });
+        this.onClick('btnRandomMapRoom', () => {
+          const presets = ['classic_bridges', 'twin_bridges', 'cross_bridges', 'river_delta', 'coral_maze', 'peninsula_fort', 'four_corners', 'archipelago', 'canyon_pass', 'random_islands'];
+          const pick = presets[Math.floor(Math.random() * presets.length)];
+          document.getElementById('roomMapPreset').value = pick;
+          this.roomState.preset = pick;
+          this.roomState.customTerrain = this.buildTerrain(this.roomState.rows, this.roomState.cols, pick);
+          this.renderRoomPreview();
+        });
+        this.onClick('btnSaveRoomPreset', () => {
+          this.savedRooms.push({
+            name: this.roomState.name,
+            preset: this.roomState.preset,
+            rows: this.roomState.rows,
+            cols: this.roomState.cols,
+            tcRadius: Number(document.getElementById('roomTcRadius').value) || 3,
+            arsenal: document.getElementById('roomArsenal').value,
+            turnTime: Number(document.getElementById('roomTurnTime').value) || 60,
+            customTerrain: this.roomState.customTerrain
+          });
+          localStorage.setItem('attacktik_saved_rooms', JSON.stringify(this.savedRooms));
+          this.roomState.chat.push({ sender: 'מערכת', text: '⭐ הגדרות החדר והמפה נשמרו!' });
+          this.renderRoomChat();
+        });
+        this.onClick('btnLoadSavedIntoRoom', () => {
+          if (this.savedRooms.length === 0) return;
+          const last = this.savedRooms[this.savedRooms.length - 1];
+          this.roomState.rows = last.rows || last.customTerrain.length;
+          this.roomState.cols = last.cols || last.customTerrain[0].length;
+          document.getElementById('roomRows').value = this.roomState.rows;
+          document.getElementById('roomCols').value = this.roomState.cols;
+          this.roomState.customTerrain = last.customTerrain.map(r => [...r]);
+          this.renderRoomPreview();
+        });
+        this.onClick('btnCloseRoom', () => {
+          this.roomState.chat = [];
+          if (this.currentRoomId) {
+            if (this.roomChannel) this.roomChannel.postMessage({ type: 'ROOM_CLOSE', roomId: this.currentRoomId });
+            this.activeRooms = this.activeRooms.filter(x => x.id !== this.currentRoomId);
+            this.currentRoomId = null;
+          }
+          this.openOnlineLobby();
+        });
+        this.onClick('btnSimJoinPlayer', () => {
+          if (this.roomState.players.length < 2) {
+            this.roomState.players.push({ name: 'מפקד_אורח', admin: false, ready: true });
+            this.roomState.chat.push({ sender: 'מערכת', text: 'מפקד_אורח הצטרף לחדר וסימן מוכן.' });
+            this.renderRoomPlayers();
+            this.renderRoomChat();
+          }
+        });
+        this.onClick('btnToggleReady', () => {
+          const me = this.roomState.players[0];
+          me.ready = !me.ready;
+          const btn = document.getElementById('btnToggleReady');
+          btn.textContent = me.ready ? '✅ מוכן לקרב (לחץ לביטול)' : '⏳ לא מוכן (לחץ לאישור)';
+          btn.className = me.ready ? 'flex-1 py-3 rounded-2xl bg-emerald-500 text-slate-950 font-black text-sm' : 'flex-1 py-3 rounded-2xl bg-amber-500 text-slate-950 font-black text-sm';
+          this.renderRoomPlayers();
+        });
+        this.onClick('btnSendRoomChat', () => {
+          const inp = document.getElementById('roomChatInput');
+          if (!inp.value.trim()) return;
+          const msgObj = { sender: this.nickname, text: inp.value.trim() };
+          this.roomState.chat.push(msgObj);
+          if (this.peerConn && this.peerConn.open) {
+            try { this.peerConn.send({ type: 'CHAT', msg: msgObj }); } catch (e) {}
+          }
+          inp.value = '';
+          this.renderRoomChat();
+        });
+        this.onClick('btnStartOnlineBattle', () => {
+          this.turnTimeLimit = Number(document.getElementById('roomTurnTime').value) || 60;
+          const tcRad = Number(document.getElementById('roomTcRadius').value) || 3;
+          const arsenal = document.getElementById('roomArsenal').value;
+          const rCount = Math.min(99, Math.max(8, Number(document.getElementById('roomRows').value) || this.roomState.rows));
+          const cCount = Math.min(99, Math.max(8, Number(document.getElementById('roomCols').value) || this.roomState.cols));
+          this.startTcDeployment(rCount, cCount, this.roomState.preset, this.roomState.customTerrain, tcRad, true, arsenal);
+        });
+
+        this.onClick('btnResetDeploy', () => this.resetDeployment());
+        this.onClick('btnAutoDeploy', () => this.autoDeployAll());
+        this.onClick('btnConfirmDeploy', () => this.finishDeployment());
+        this.onClick('btnCloseArsenalModal', () => document.getElementById('arsenalInfoModal').classList.add('hidden'));
+        this.onClick('btnMinimizeUnitCard', () => {
+          this.unitCardMinimized = true;
+          this.positionUnitCard();
+        });
+        this.onClick('btnExpandUnitCard', () => {
+          this.unitCardMinimized = false;
+          this.positionUnitCard();
+        });
+        const closeCardFn = () => {
+          this.selected = null;
+          this.validMoves = [];
+          document.getElementById('selectedUnitCard').classList.add('hidden');
+        };
+        this.onClick('btnCloseUnitCard', closeCardFn);
+        this.onClick('btnCloseUnitCardMini', closeCardFn);
+        this.onClick('btnUnitAbility', () => this.triggerUnitAbility());
+        this.onClick('btnUnitAttack', () => this.triggerUnitAttackAction());
+        this.onClick('btnUnitLoad', () => this.triggerUnitLoadAction());
+        this.onClick('btnUnitUnload', () => this.triggerUnitUnloadAction());
+        this.onClick('btnCancelUnloadSelect', () => {
+          this.pendingUnload = null;
+          this.selectedUnloadIdx = null;
+          document.getElementById('unloadSelectModal').classList.add('hidden');
+        });
+        this.onClick('btnUnitBluffReveal', () => {
+          if (!this.selected) return;
+          const p = (this.selected.layer === 'naval' ? this.navalGrid : this.landGrid)[this.selected.r][this.selected.c];
+          if (p) {
+            p.revealed = true;
+            p.fiftyPercentInfo = p.name;
+            this.logAction('blue', `👁️ חשפת ליריב באופן יזום את ${p.name} (הטעיה טקטית).`);
+          }
+        });
+
+        this.onClick('btnTieRetreat', () => {
+          document.getElementById('tieBreakerModal').classList.add('hidden');
+          if (this.pendingTie) {
+            const t = this.pendingTie;
+            this.pendingTie = null;
+            this.resolveCombatOutcome(t.fromR, t.fromC, t.fromLayer, t.move, t.attacker, t.defender, 'retreat');
+          }
+        });
+        this.onClick('btnTieDeath', () => {
+          document.getElementById('tieBreakerModal').classList.add('hidden');
+          if (this.pendingTie) {
+            const t = this.pendingTie;
+            this.pendingTie = null;
+            this.resolveCombatOutcome(t.fromR, t.fromC, t.fromLayer, t.move, t.attacker, t.defender, 'mutual');
+          }
+        });
+        this.onClick('btnAllianceShare', () => {
+          document.getElementById('allianceModal').classList.add('hidden');
+          this.finishGame('blue', '🏆 ניצחון משותף לבני הברית!');
+        });
+        this.onClick('btnAllianceSplit', () => {
+          document.getElementById('allianceModal').classList.add('hidden');
+          this.allianceMode = false;
+          this.logAction('blue', '⚔️ הברית התפרקה! הקרב ממשיך להכרעה סופית.');
+        });
+
+        this.onClick('btnOpenMapPainter', () => this.openPainterModal('room'));
+        this.onClick('btnSavePaintedMap', () => {
+          const savedGrid = this.painter.grid.map(r => [...r]);
+          document.getElementById('painterModal').classList.add('hidden');
+          if (this.painterTarget === 'custom') {
+            this.customTerrainOverride = savedGrid;
+            this.renderCustomPreview();
+          } else {
+            this.roomState.customTerrain = savedGrid;
+            document.getElementById('roomMapPreset').value = 'custom_drawn';
+            this.renderRoomPreview();
+          }
+        });
+        this.onClick('btnPainterZoomIn', () => { this.painter.zoom = Math.min(2.6, this.painter.zoom + 0.25); this.drawPainterCanvas(); });
+        this.onClick('btnPainterZoomOut', () => { this.painter.zoom = Math.max(0.45, this.painter.zoom - 0.25); this.drawPainterCanvas(); });
+        this.onClick('btnPainterZoomReset', () => { this.painter.zoom = 1; this.painter.panX = 0; this.painter.panY = 0; this.drawPainterCanvas(); });
+
+        document.querySelectorAll('.painter-terrain-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            this.painter.brush = Number(btn.dataset.brush);
+            document.querySelectorAll('.painter-terrain-btn').forEach(b => b.classList.replace('bg-emerald-600', 'bg-slate-800'));
+            btn.classList.replace('bg-slate-800', 'bg-emerald-600');
+          });
+        });
+        document.querySelectorAll('.painter-size-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            this.painter.size = Number(btn.dataset.size);
+            document.querySelectorAll('.painter-size-btn').forEach(b => b.classList.replace('bg-sky-500', 'bg-slate-800'));
+            btn.classList.replace('bg-slate-800', 'bg-sky-500');
+          });
+        });
+
+        const pCanvas = document.getElementById('painterCanvas');
+        let pDrawing = false;
+        let pPanning = false;
+        let pLastPan = { x: 0, y: 0 };
+        let pPinch = null;
+        let pMid = null;
+        pCanvas.addEventListener('pointerdown', (e) => {
+          if (!e.isPrimary || pPinch) {
+            pDrawing = false;
+            pPanning = false;
+            return;
+          }
+          if (this.painter.brush === -1) {
+            pPanning = true;
+            pLastPan = { x: e.clientX, y: e.clientY };
+          } else {
+            pDrawing = true;
+            this.paintAtPoint(e.clientX, e.clientY);
+          }
+        });
+        pCanvas.addEventListener('pointermove', (e) => {
+          if (pPinch || !e.isPrimary) return;
+          if (pPanning) {
+            this.painter.panX += (e.clientX - pLastPan.x);
+            this.painter.panY += (e.clientY - pLastPan.y);
+            pLastPan = { x: e.clientX, y: e.clientY };
+            this.drawPainterCanvas();
+          } else if (pDrawing) {
+            this.paintAtPoint(e.clientX, e.clientY);
+          }
+        });
+        window.addEventListener('pointerup', () => { pDrawing = false; pPanning = false; pPinch = null; pMid = null; });
+        pCanvas.addEventListener('touchstart', (e) => {
+          if (e.touches.length >= 2) {
+            pDrawing = false;
+            pPanning = false;
+            const t0 = e.touches[0], t1 = e.touches[1];
+            pPinch = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+            pMid = { x: (t0.clientX + t1.clientX) / 2, y: (t0.clientY + t1.clientY) / 2 };
+          }
+        }, { passive: true });
+        pCanvas.addEventListener('touchmove', (e) => {
+          if (e.touches.length >= 2) {
+            e.preventDefault();
+            pDrawing = false;
+            pPanning = false;
+            const t0 = e.touches[0], t1 = e.touches[1];
+            const d = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+            const mx = (t0.clientX + t1.clientX) / 2;
+            const my = (t0.clientY + t1.clientY) / 2;
+            if (pPinch && pMid) {
+              this.painter.zoom = Math.min(2.6, Math.max(0.45, this.painter.zoom * (d / pPinch)));
+              this.painter.panX += (mx - pMid.x);
+              this.painter.panY += (my - pMid.y);
+              this.drawPainterCanvas();
+            }
+            pPinch = d;
+            pMid = { x: mx, y: my };
+          }
+        }, { passive: false });
+
+        this.onClick('btnBattleMenu', () => this.openMainMenuWithGuard());
+        this.onClick('btnVictoryMenu', () => this.openMainMenuWithGuard());
+        this.onClick('btnVictoryNext', () => {
+          if (this.isCampaign) this.startCampaignStage(Math.min(50, this.campaignLevel + 1));
+          else this.openMainMenuWithGuard();
+        });
+        this.onClick('btnCamZoomIn', () => { this.cam.zoom = Math.min(2.6, this.cam.zoom + 0.2); });
+        this.onClick('btnCamZoomOut', () => { this.cam.zoom = Math.max(0.35, this.cam.zoom - 0.2); });
+        this.onClick('btnCamReset', () => this.resetCamera());
+
+        this.onClick('btnToggleHudLog', () => {
+          const box = document.getElementById('hudExpandedLogs');
+          const lbl = document.getElementById('hudLogBtnLabel');
+          const hidden = box.classList.toggle('hidden');
+          lbl.textContent = hidden ? 'הרחב' : 'כווץ';
+        });
+
+        this.onClick('btnBattleChatBubble', () => {
+          document.getElementById('battleChatPopover').classList.toggle('hidden');
+          document.getElementById('battleChatUnreadDot').classList.add('hidden');
+        });
+        this.onClick('btnCloseBattleChat', () => document.getElementById('battleChatPopover').classList.add('hidden'));
+        this.onClick('btnSendBattleChat', () => {
+          const inp = document.getElementById('battleChatInput');
+          if (!inp.value.trim()) return;
+          const row = document.createElement('div');
+          row.innerHTML = `<span class="font-black text-sky-400">${this.nickname}:</span> <span class="text-slate-200">${inp.value.trim()}</span>`;
+          document.getElementById('battleChatList').appendChild(row);
+          inp.value = '';
+        });
+
+        this.onClick('btnMenuTutorial', () => {
+          this.hideAllOverlays();
+          this.phase = 'tutorial';
+          this.isCampaign = false;
+          this.useTurnTimer = false;
+          this.tutIndex = 0;
+          this.setupBoardData(12, 10, 'classic_bridges');
+          this.populateDemoBattle(1);
+          document.getElementById('battleHud').classList.remove('hidden');
+          document.getElementById('deployPanel').classList.add('hidden');
+          document.getElementById('sideObjectiveBanner').classList.add('hidden');
+          document.getElementById('battleTimerWrapper').classList.add('hidden');
+          const tutBanner = document.getElementById('tutorialBanner');
+          tutBanner.style.left = '50%';
+          tutBanner.style.top = '64px';
+          tutBanner.style.transform = 'translateX(-50%)';
+          tutBanner.classList.remove('hidden');
+          this.updateTutorialBanner();
+        });
+        this.onClick('btnTutPrev', () => {
+          if (this.tutIndex > 0) {
+            this.tutIndex--;
+            this.updateTutorialBanner();
+          }
+        });
+        this.onClick('btnTutNext', () => {
+          if (this.tutIndex < TUTORIAL_STEPS.length - 1) {
+            this.tutIndex++;
+            this.updateTutorialBanner();
+          } else {
+            this.openMainMenuWithGuard();
+          }
+        });
+        this.onClick('btnTutReset', () => {
+          this.tutIndex = 0;
+          this.setupBoardData(12, 10, 'classic_bridges');
+          this.populateDemoBattle(1);
+          this.updateTutorialBanner();
+        });
+        this.onClick('btnTutReplayDemo', () => this.playTutorialDemoStep());
+
+        this.canvas.addEventListener('mousedown', (e) => {
+          this.gesture.active = true;
+          this.gesture.moved = false;
+          this.gesture.startX = e.clientX;
+          this.gesture.startY = e.clientY;
+          this.gesture.camX = this.cam.x;
+          this.gesture.camY = this.cam.y;
+        });
+        window.addEventListener('mousemove', (e) => {
+          if (!this.gesture.active) return;
+          const dx = e.clientX - this.gesture.startX;
+          const dy = e.clientY - this.gesture.startY;
+          if (Math.hypot(dx, dy) > 5) this.gesture.moved = true;
+          this.cam.x = this.gesture.camX + dx;
+          this.cam.y = this.gesture.camY + dy;
+        });
+        window.addEventListener('mouseup', (e) => {
+          if (this.gesture.active && !this.gesture.moved) this.handleBoardTap(e.clientX, e.clientY);
+          this.gesture.active = false;
+        });
+
+        this.canvas.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1 && !this.gesture.isPinching) {
+            this.gesture.active = true;
+            this.gesture.moved = false;
+            this.gesture.startX = e.touches[0].clientX;
+            this.gesture.startY = e.touches[0].clientY;
+            this.gesture.camX = this.cam.x;
+            this.gesture.camY = this.cam.y;
+          } else if (e.touches.length === 2) {
+            this.gesture.active = false;
+            this.gesture.moved = true;
+            this.gesture.isPinching = true;
+            this.gesture.pinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            this.gesture.pinchZoom = this.cam.zoom;
+          }
+        }, { passive: true });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+          if (e.touches.length === 1 && this.gesture.active && !this.gesture.isPinching) {
+            const dx = e.touches[0].clientX - this.gesture.startX;
+            const dy = e.touches[0].clientY - this.gesture.startY;
+            if (Math.hypot(dx, dy) > 6) this.gesture.moved = true;
+            this.cam.x = this.gesture.camX + dx;
+            this.cam.y = this.gesture.camY + dy;
+          } else if (e.touches.length === 2 && this.gesture.isPinching) {
+            e.preventDefault();
+            const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            if (this.gesture.pinchDist > 0) {
+              this.cam.zoom = Math.min(2.6, Math.max(0.35, this.gesture.pinchZoom * (d / this.gesture.pinchDist)));
+            }
+          }
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchend', (e) => {
+          if (e.touches.length === 0) {
+            if (this.gesture.active && !this.gesture.moved && !this.gesture.isPinching && e.changedTouches[0]) {
+              this.handleBoardTap(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+            }
+            this.gesture.active = false;
+            this.gesture.isPinching = false;
+            this.gesture.pinchDist = 0;
+          }
+        });
+      }
+
+      updateTutorialBanner() {
+        const total = TUTORIAL_STEPS.length;
+        const step = this.tutIndex + 1;
+        const pct = Math.round((step / total) * 100);
+        const item = TUTORIAL_STEPS[this.tutIndex];
+        document.getElementById('tutStepNum').textContent = `${step} מתוך ${total}`;
+        document.getElementById('tutPercent').textContent = `${pct}%`;
+        document.getElementById('tutProgressBar').style.width = `${pct}%`;
+        document.getElementById('tutStepDesc').innerHTML = `<strong class="text-amber-300">${item.title}:</strong> ${item.desc}`;
+        this.playTutorialDemoStep();
+      }
+
+      playTutorialDemoStep() {
+        if (this.phase !== 'tutorial') return;
+        const item = TUTORIAL_STEPS[this.tutIndex];
+        if (!item) return;
+        if (!item.demo) {
+          this.lastMoveTrails = { blue: null, red: null };
+          this.animMove = null;
+          this.logAction('blue', `🎓 שלב ${this.tutIndex + 1}: ${item.title}`);
+          return;
+        }
+        const { fromR, fromC, toR, toC, team, pieceType } = item.demo;
+        const pDef = PIECE_DEFS[pieceType || 'SERG'] || PIECE_DEFS.SERG;
+        const demoPiece = { type: pieceType || 'SERG', ...pDef, team, revealed: team === 'blue' };
+
+        this.lastMoveTrails[team] = {
+          fromR, fromC, toR, toC,
+          cells: [{ r: fromR, c: fromC }, { r: toR, c: toC }],
+          team
+        };
+        if (fromR === toR && fromC === toC) {
+          this.spawnExplosionFx(fromR, fromC, '#facc15', 'radar');
+        } else {
+          this.animMove = {
+            piece: demoPiece,
+            fromR, fromC, toR, toC,
+            startTime: performance.now(),
+            dur: 560,
+            onDone: () => this.spawnExplosionFx(toR, toC, team === 'blue' ? '#38bdf8' : '#f43f5e', 'radar')
+          };
+        }
+        this.logAction(team, `🎓 הדגמת שלב ${this.tutIndex + 1}: ${item.title} (${this.formatCoord(fromR, fromC)} ➔ ${this.formatCoord(toR, toC)})`);
+      }
+    }
+
+    window.onload = () => {
+      window.attacktik = new AttacktikApp();
+      const params = new URLSearchParams(window.location.search);
+      const joinCode = params.get('room');
+      if (joinCode) {
+        setTimeout(() => {
+          if (window.attacktik) {
+            document.getElementById('splashScreen')?.classList.add('hidden');
+            if (!window.attacktik.nickname) {
+              window.attacktik.nickname = 'מפקד_' + Math.floor(100 + Math.random() * 899);
+            }
+            window.attacktik.connectToOnlineCode(joinCode);
+          }
+        }, 1150);
+      }
+    };
+  </script>
+</body>
+</html>
