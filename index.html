@@ -63,7 +63,7 @@
     <div class="glass-card max-w-md w-full p-7 text-center space-y-5 border-sky-500/40 pointer-events-none">
       <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-sky-500/15 border border-sky-400/30 text-sky-300 text-xs font-bold">
         <span>⚔️</span>
-        <span>אסטרטגיה טקטית • TC • גשרים • תובלה • אונליין</span>
+        <span>אסטרטגיה טקטית • TC • גשרים • תובלה • אונליין P2P</span>
       </div>
       <div>
         <h1 class="text-4xl sm:text-5xl font-black tracking-tight text-white">אטקטיקו</h1>
@@ -299,21 +299,24 @@
   <div id="onlineLobbyScreen" class="screen-layer z-40 bg-slate-950/92 hidden">
     <div class="glass-card max-w-2xl w-full p-5 sm:p-6 space-y-4 max-h-[92vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h2 class="text-xl font-black text-emerald-400">🌐 לובי חדרים פעילים אונליין VS</h2>
+        <div>
+          <h2 class="text-xl font-black text-emerald-400">🌐 לובי אונליין VS (P2P חי)</h2>
+          <div id="lobbyNetworkStatus" class="text-[11px] text-sky-300 font-bold mt-0.5">🔄 מאתחל רשת P2P...</div>
+        </div>
         <button id="btnCloseOnlineLobby" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold">✖ סגור</button>
       </div>
 
       <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 space-y-2.5">
-        <div class="text-xs font-bold text-slate-300">➕ פתיחת חדר קרב חדש או הצטרפות בקוד חדר (GitHub Pages / P2P):</div>
+        <div class="text-xs font-bold text-slate-300">➕ פתיחת חדר קרב אונליין חדש או הצטרפות בקוד חדר מחבר:</div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <input id="newRoomName" type="text" placeholder="שם החדר (אופציונלי)" class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-xs text-white" />
           <input id="newRoomPass" type="text" placeholder="סיסמה לחדר (אופציונלי)" class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-xs text-white" />
           <button id="btnCreateOnlineRoom" class="py-2 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs active:scale-95 transition">
-            צור חדר והיכנס ◀
+            צור חדר אונליין ◀
           </button>
         </div>
-        <div class="flex gap-2 pt-1 border-t border-slate-800/80">
-          <input id="joinByCodeInput" type="text" placeholder="הדבק קוד חדר אונליין להצטרפות ישירה..." class="flex-1 px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-xs text-white font-mono" />
+        <div class="flex gap-2 pt-1.5 border-t border-slate-800/80">
+          <input id="joinByCodeInput" type="text" placeholder="הזן קוד חדר בן 6 תווים מחבר..." class="flex-1 px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-xs text-white font-mono uppercase" />
           <button id="btnJoinByCode" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs active:scale-95 transition">
             🔗 הצטרף לקוד
           </button>
@@ -322,27 +325,27 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto custom-scroll flex-1">
         <div class="space-y-2">
-          <div class="text-xs font-black text-sky-400">📡 חדרים פעילים כעת:</div>
+          <div class="text-xs font-black text-sky-400">📡 חדרים פעילים ברשת המקומית:</div>
           <div id="activeRoomsList" class="space-y-2"></div>
         </div>
         <div class="space-y-2">
-          <div class="text-xs font-black text-amber-400">⭐ חדרים שמורים:</div>
+          <div class="text-xs font-black text-amber-400">⭐ תבניות חדרים שמורות:</div>
           <div id="savedRoomsList" class="space-y-2"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 8. חדר המתנה אונליין -->
+  <!-- 8. חדר המתנה אונליין אמיתי -->
   <div id="onlineRoomScreen" class="screen-layer z-40 bg-slate-950/95 hidden">
     <div class="glass-card max-w-3xl w-full p-4 sm:p-6 space-y-3 max-h-[94vh] flex flex-col">
       <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
         <div>
           <div class="flex items-center gap-2">
-            <h2 id="roomTitleDisplay" class="text-lg sm:text-xl font-black text-white">חדר קרב</h2>
+            <h2 id="roomTitleDisplay" class="text-lg sm:text-xl font-black text-white">חדר קרב אונליין</h2>
             <span id="roomPassBadge" class="text-[11px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-lg border border-amber-500/30">פתוח</span>
           </div>
-          <p class="text-[11px] text-slate-400">רק האדמין משנה הגדרות ומצייר מפה; תצוגה מקדימה גלויה לכולם.</p>
+          <p id="roomConnectionSub" class="text-[11px] text-emerald-300 font-bold mt-0.5">🔄 מתחבר לשרת P2P...</p>
         </div>
         <div class="flex items-center gap-1.5">
           <button id="btnSaveRoomPreset" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold">⭐ שמור הגדרות</button>
@@ -352,9 +355,12 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scroll flex-1 pr-0.5">
         <div class="space-y-2.5 bg-slate-900/80 p-3 rounded-2xl border border-slate-800">
-          <div class="flex items-center justify-between gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-2.5 py-1.5 text-[11px]">
-            <span class="text-emerald-300 font-bold truncate">🌐 קוד חדר: <strong id="roomOnlineCode" class="font-mono text-white">LOCAL-VS</strong></span>
-            <button id="btnCopyRoomInvite" type="button" class="shrink-0 px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black">📋 העתק קישור</button>
+          <div class="flex flex-wrap items-center justify-between gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-2.5 py-2 text-xs">
+            <span class="text-emerald-300 font-bold">🌐 קוד חדר: <strong id="roomOnlineCode" class="font-mono text-white text-sm tracking-wider">------</strong></span>
+            <div class="flex items-center gap-1.5">
+              <button id="btnCopyRoomCodeOnly" type="button" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-[11px]">📋 העתק קוד</button>
+              <button id="btnCopyRoomInvite" type="button" class="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px]">🔗 העתק קישור</button>
+            </div>
           </div>
           <div class="flex items-center justify-between gap-1">
             <select id="roomMapPreset" class="flex-1 p-2 rounded-xl bg-slate-800 border border-slate-600 text-xs font-bold text-white">
@@ -382,8 +388,8 @@
               <option value="6">קוטר TC ענק (6)</option>
             </select>
             <select id="roomArsenal" class="p-2 rounded-xl bg-slate-800 border border-slate-600 font-bold">
-              <option value="full">ארסנל מלא (25)</option>
-              <option value="fast">ארסנל מהיר (15)</option>
+              <option value="full">ארסנל מלא (23)</option>
+              <option value="fast">ארסנל מהיר (14)</option>
             </select>
             <select id="roomTurnTime" class="p-2 rounded-xl bg-slate-800 border border-slate-600 font-bold">
               <option value="60">60 שניות</option>
@@ -405,7 +411,7 @@
 
           <div class="bg-slate-950/90 p-2.5 rounded-xl border border-slate-700 space-y-2">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-emerald-400">🗺️ תצוגה מקדימה (גלויה לכולם)</span>
+              <span class="text-xs font-bold text-emerald-400">🗺️ תצוגה מקדימה מסונכרנת</span>
               <button id="btnOpenMapPainter" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow active:scale-95 transition">
                 🖌️ כלי העריכה (צייר)
               </button>
@@ -417,17 +423,17 @@
         <div class="space-y-2.5 flex flex-col justify-between bg-slate-900/80 p-3 rounded-2xl border border-slate-800">
           <div class="space-y-2">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-black text-sky-400">👥 משתתפים בחדר:</span>
-              <button id="btnSimJoinPlayer" class="text-[11px] bg-slate-800 hover:bg-slate-700 px-2 py-0.5 rounded text-slate-300">+ דמה הצטרפות יריב</button>
+              <span class="text-xs font-black text-sky-400">👥 משתתפים מחוברים בחדר:</span>
+              <button id="btnAddAiIfSolo" class="text-[11px] bg-slate-800 hover:bg-slate-700 border border-slate-600 px-2.5 py-1 rounded-lg text-amber-300 font-bold">🤖 שחק נגד AI במקום</button>
             </div>
             <div id="roomPlayersList" class="space-y-1.5"></div>
           </div>
 
           <div class="space-y-1.5 flex-1 flex flex-col justify-end">
-            <span class="text-xs font-black text-slate-400">💬 צ'אט חדר:</span>
+            <span class="text-xs font-black text-slate-400">💬 צ'אט חדר חי (P2P):</span>
             <div id="roomChatMessages" class="h-28 overflow-y-auto custom-scroll bg-slate-950/80 rounded-xl p-2 text-xs space-y-1 border border-slate-800"></div>
             <div class="flex gap-1.5">
-              <input id="roomChatInput" type="text" placeholder="כתוב הודעה..." class="flex-1 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-600 text-xs text-white" />
+              <input id="roomChatInput" type="text" placeholder="כתוב הודעה לחבר..." class="flex-1 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-600 text-xs text-white" />
               <button id="btnSendRoomChat" class="px-3 py-1.5 rounded-xl bg-sky-500 text-slate-950 font-black text-xs">שלח</button>
             </div>
           </div>
@@ -437,7 +443,7 @@
       <div class="flex items-center gap-2 pt-1">
         <button id="btnToggleReady" class="hidden flex-1 py-3 rounded-2xl bg-amber-500 text-slate-950 font-black text-sm">⏳ לא מוכן (לחץ לאישור)</button>
         <button id="btnStartOnlineBattle" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-sky-500 text-slate-950 font-black text-base shadow-lg active:scale-95 transition">
-          🚀 התחל קרב אונליין (הצבת TC)
+          🚀 התחל קרב אונליין
         </button>
       </div>
     </div>
@@ -513,7 +519,7 @@
       </div>
     </div>
 
-    <!-- פאנל הצבת בסיס TC וארסנל כלים — מעוגן בתחתית המסך בצורה מינימלית ונוחה -->
+    <!-- פאנל הצבת בסיס TC וארסנל כלים -->
     <div id="deployPanel" class="pointer-events-auto fixed bottom-14 left-1/2 -translate-x-1/2 z-30 max-w-xl w-[95%] bg-slate-900/95 border border-amber-400/50 rounded-2xl px-3 py-2 shadow-2xl space-y-1.5 hidden">
       <div class="flex items-center justify-between gap-2 text-[11px] sm:text-xs">
         <span id="deployTitle" class="font-black text-amber-300 truncate">🏛️ לחץ על יבשה להקמת TC (לחיצה על כלי מוצב מחזירה אותו)</span>
@@ -724,132 +730,41 @@
     };
 
     const TUTORIAL_STEPS = [
-      {
-        title: 'מבנה הלוח וקואורדינטות שחמט',
-        desc: 'הלוח מוקף בסרגל קואורדינטות (A–J ו-1–12) למעקב מדויק. גרור באצבע להזזה חופשית או צבוט לשינוי זום.',
-        demo: null
-      },
-      {
-        title: 'המטרה: כיבוש דגל האויב (🚩)',
-        desc: 'דגל האויב מוסתר בעורף הצפוני ואינו יכול לזוז. כבוש אותו עם יחידת חי"ר יבשתית בלבד כדי לנצח!',
-        demo: { fromR: 8, fromC: 4, toR: 7, toC: 4, layer: 'land', team: 'blue', pieceType: 'SERG' }
-      },
-      {
-        title: 'ערפל מלחמה ומהלך יריב (?)',
-        desc: 'כלי היריב חסויים תחת (?). ראה כעת הדגמה של מהלך יריב מסתורי עם שובל אדום שמסמן מאין ולאן נע.',
-        demo: { fromR: 2, fromC: 5, toR: 3, toC: 5, layer: 'land', team: 'red', pieceType: 'SCOUT' }
-      },
-      {
-        title: 'בחירת כלי וכרטיסיית מידע הניתנת לגרירה',
-        desc: 'לחץ על כל כלי כחול על הלוח: תיפתח כרטיסיית מידע שניתן גם לגרור לכל מקום על המסך או למזער לתחתית.',
-        demo: null
-      },
-      {
-        title: 'תנועת חי"ר רגילה (משבצת 1)',
-        desc: 'רוב היחידות (מרשל, אלוף, אל"ם, סרן, סגן, סמל) נעות משבצת אחת אופקית או אנכית בלבד.',
-        demo: { fromR: 8, fromC: 2, toR: 7, toC: 2, layer: 'land', team: 'blue', pieceType: 'SERG' }
-      },
-      {
-        title: 'תנועת סייר מהיר (🔭 דרגה 2)',
-        desc: 'הסייר יכול לדלג עד 2 משבצות בקו ישר (אופקי או אנכי) בשטח פנוי — תקיפה מותרת ממרחק 1 בלבד.',
-        demo: { fromR: 9, fromC: 6, toR: 7, toC: 6, layer: 'land', team: 'blue', pieceType: 'SCOUT' }
-      },
-      {
-        title: 'המרגל (🕵️ דרגה 1) מול המרשל (🌟 10)',
-        desc: 'המרגל אמנם בדרגה 1, אך כשהוא תוקף ראשון את המרשל (10) — המרגל מחסל אותו! אם המרשל תוקף ראשון, המרגל מפסיד.',
-        demo: { fromR: 8, fromC: 8, toR: 7, toC: 8, layer: 'land', team: 'blue', pieceType: 'SPY' }
-      },
-      {
-        title: 'מוקשים (💣) ונטרול ע"י חבלן (🛠️ 3)',
-        desc: 'מוקש משמיד כל יחידה שתוקפת אותו, מלבד החבלן (דרגה 3) שמנטרל את המוקש בבטחה וכובש את המשבצת.',
-        demo: { fromR: 10, fromC: 4, toR: 9, toC: 4, layer: 'land', team: 'blue', pieceType: 'MINER' }
-      },
-      {
-        title: 'גשרים דו-מפלסיים — מעבר יבשתי מעל הגשר',
-        desc: 'כלי יבשה חוצים נהרות אך ורק דרך גשרים. ראה כעת יחידת חי"ר עולה על הגשר במרכז הלוח.',
-        demo: { fromR: 7, fromC: 2, toR: 6, toC: 2, layer: 'land', team: 'blue', pieceType: 'CAPT' }
-      },
-      {
-        title: 'שיט ימי מתחת לגשרים וסימון (⇅)',
-        desc: 'ספינה (🚢) שטה בים ועוברת מתחת לגשר! כשיש כלי מעל וכלי מתחת מופיע חץ (⇅), ורק הספינה יכולה לתקוף מלמטה.',
-        demo: { fromR: 6, fromC: 0, toR: 6, toC: 2, layer: 'naval', team: 'blue', pieceType: 'BOAT' }
-      },
-      {
-        title: 'העמסת יחידת יבשה על ספינת תובלה (📦)',
-        desc: 'לחץ בכרטיסיית הכלי על "📦 העמס יחידה" ואז בחר ביחידה הסמוכה להעמסה לתובלה (עד 2 יחידות)!',
-        demo: { fromR: 7, fromC: 4, toR: 6, toC: 4, layer: 'land', team: 'blue', pieceType: 'LIEUT' }
-      },
-      {
-        title: 'הפלגה עם מטען ופריקה בחוף האויב (🪂)',
-        desc: 'לאחר שספינה טעונה מפליגה לגדת האויב, בחר בה ולחץ בכרטיסייה על "🪂 פרוק יחידה" ובחר משבצת יבשה סמוכה!',
-        demo: { fromR: 6, fromC: 4, toR: 5, toC: 4, layer: 'naval', team: 'blue', pieceType: 'BOAT' }
-      },
-      {
-        title: 'מסוק תובלה (🚁 דרגה 7) — טיסה והנחתה',
-        desc: 'המסוק טס עד 3 משבצות מעל ים ויבשה, מעמיס יחידות יבשה ומנחית אותן מעבר לקווי ההגנה.',
-        demo: { fromR: 9, fromC: 3, toR: 6, toC: 3, layer: 'land', team: 'blue', pieceType: 'HELI' }
-      },
-      {
-        title: 'רחפן תקיפה (🛸 דרגה 5)',
-        desc: 'הרחפן טס עד 2 משבצות מעל כל שטח, מפוצץ מוקשי אויב ומעמיס יחידת חי"ר.',
-        demo: { fromR: 9, fromC: 5, toR: 7, toC: 5, layer: 'land', team: 'blue', pieceType: 'DRONE' }
-      },
-      {
-        title: 'מטוס ביון (✈️ טווח 15)',
-        desc: 'מטוס הביון חוצה את המפה בטיסה ארוכה ומבצע סריקת מכ"ם סביבתית לחשיפת כלי אויב.',
-        demo: { fromR: 11, fromC: 8, toR: 4, toC: 8, layer: 'land', team: 'blue', pieceType: 'PLANE' }
-      },
-      {
-        title: 'סנסור מכ"ם (📡) — סריקה ללא קרב',
-        desc: 'בחר בסנסור ולחץ בכרטיסייה על "📡 הפעל סריקת מכ"ם" כדי לחשוף כל אויב מוסתר ברדיוס 2 משבצות.',
-        demo: { fromR: 10, fromC: 7, toR: 9, toC: 7, layer: 'land', team: 'blue', pieceType: 'SENSOR' }
-      },
-      {
-        title: 'פיצוץ מבוקר של פצצה/מוקש (💣)',
-        desc: 'ניתן לבחור מוקש שלך ולהפעיל "💣 פיצוץ מבוקר" שמשמיד אויבים בכל 4 המשבצות הסמוכות.',
-        demo: { fromR: 11, fromC: 4, toR: 11, toC: 4, layer: 'land', team: 'blue', pieceType: 'BOMB' }
-      },
-      {
-        title: 'הטעיה טקטית וערפל 50% (👁️ / ❓)',
-        desc: 'בכרטיסיית הכלי תוכל לחשוף כלי להטעיה, או להעמיס כלי חשוף יחד עם כלי נוסף כדי להחזירו לערפל 50%!',
-        demo: null
-      },
-      {
-        title: 'הכרעת תיקו בעימות חזיתי (⚔️ / 🏳️)',
-        desc: 'כששתי יחידות שוות דרגה מתנגשות, נפתח חלון הכרעה: "🏳️ חדל/נסיגה" או "⚔️ עד המוות" להשמדה הדדית.',
-        demo: { fromR: 7, fromC: 6, toR: 6, toC: 6, layer: 'land', team: 'blue', pieceType: 'COL' }
-      },
-      {
-        title: 'הקמת מפקדת TC ומעגל פריסה',
-        desc: 'בתחילת קרב מותאם או אונליין, מציבים את ה-TC ביבשה ופורסים את הצבא בתוך מעגל הפיקוד (קוטר TC מתכוונן).',
-        demo: null
-      },
-      {
-        title: 'החזרת כלי מהלוח או איפוס הצבה מלא',
-        desc: 'בזמן ההצבה תוכל ללחוץ על כל כלי שהצבת כדי להחזירו לארסנל, או ללחוץ "🔄 אפס הכל" לאיפוס מלא.',
-        demo: null
-      },
-      {
-        title: 'יומן המלחמה המתרחב ונקודות הצבע',
-        desc: 'בתחתית המסך מוצגת הפעולה האחרונה עם נקודה כחולה (שלך) או אדומה (היריב). לחץ "📜 הרחב" לצפייה בכל ההיסטוריה.',
-        demo: null
-      },
-      {
-        title: 'מערכת הבריתות (2 נגד 2) והכרעת ברית',
-        desc: 'במצב ברית, בני הברית רואים זה את כליו של זה. לאחר הבסת האויב בוחרים בין ניצחון משותף להמשך קרב הכרעה.',
-        demo: null
-      },
-      {
-        title: 'אונליין VS, עורך מפות וצ׳אט חי',
-        desc: 'בלובי האונליין או בחדר הפיקוד תוכל לצייר מפות מותאמות ב-2 אצבעות, לשמור חדרים ולשוחח בצ׳אט החי.',
-        demo: null
-      },
-      {
-        title: 'סיום ההדרכה המעשית — מוכן לקרב!',
-        desc: 'סיימת את כל 25 שלבי ההדרכה המעשית! תוכל להמשיך להתאמן כאן או ללחוץ "המשך ◀" לחזרה לתפריט הראשי.',
-        demo: null
-      }
+      { title: 'מבנה הלוח וקואורדינטות שחמט', desc: 'הלוח מוקף בסרגל קואורדינטות (A–J ו-1–12) למעקב מדויק. גרור באצבע להזזה חופשית או צבוט לשינוי זום.', demo: null },
+      { title: 'המטרה: כיבוש דגל האויב (🚩)', desc: 'דגל האויב מוסתר בעורף הצפוני ואינו יכול לזוז. כבוש אותו עם יחידת חי"ר יבשתית בלבד כדי לנצח!', demo: { fromR: 8, fromC: 4, toR: 7, toC: 4, layer: 'land', team: 'blue', pieceType: 'SERG' } },
+      { title: 'ערפל מלחמה ומהלך יריב (?)', desc: 'כלי היריב חסויים תחת (?). ראה כעת הדגמה של מהלך יריב מסתורי עם שובל אדום שמסמן מאין ולאן נע.', demo: { fromR: 2, fromC: 5, toR: 3, toC: 5, layer: 'land', team: 'red', pieceType: 'SCOUT' } },
+      { title: 'בחירת כלי וכרטיסיית מידע הניתנת לגרירה', desc: 'לחץ על כל כלי כחול על הלוח: תיפתח כרטיסיית מידע שניתן גם לגרור לכל מקום על המסך או למזער לתחתית.', demo: null },
+      { title: 'תנועת חי"ר רגילה (משבצת 1)', desc: 'רוב היחידות (מרשל, אלוף, אל"ם, סרן, סגן, סמל) נעות משבצת אחת אופקית או אנכית בלבד.', demo: { fromR: 8, fromC: 2, toR: 7, toC: 2, layer: 'land', team: 'blue', pieceType: 'SERG' } },
+      { title: 'תנועת סייר מהיר (🔭 דרגה 2)', desc: 'הסייר יכול לדלג עד 2 משבצות בקו ישר (אופקי או אנכי) בשטח פנוי — תקיפה מותרת ממרחק 1 בלבד.', demo: { fromR: 9, fromC: 6, toR: 7, toC: 6, layer: 'land', team: 'blue', pieceType: 'SCOUT' } },
+      { title: 'המרגל (🕵️ דרגה 1) מול המרשל (🌟 10)', desc: 'המרגל אמנם בדרגה 1, אך כשהוא תוקף ראשון את המרשל (10) — המרגל מחסל אותו! אם המרשל תוקף ראשון, המרגל מפסיד.', demo: { fromR: 8, fromC: 8, toR: 7, toC: 8, layer: 'land', team: 'blue', pieceType: 'SPY' } },
+      { title: 'מוקשים (💣) ונטרול ע"י חבלן (🛠️ 3)', desc: 'מוקש משמיד כל יחידה שתוקפת אותו, מלבד החבלן (דרגה 3) שמנטרל את המוקש בבטחה וכובש את המשבצת.', demo: { fromR: 10, fromC: 4, toR: 9, toC: 4, layer: 'land', team: 'blue', pieceType: 'MINER' } },
+      { title: 'גשרים דו-מפלסיים — מעבר יבשתי מעל הגשר', desc: 'כלי יבשה חוצים נהרות אך ורק דרך גשרים. ראה כעת יחידת חי"ר עולה על הגשר במרכז הלוח.', demo: { fromR: 7, fromC: 2, toR: 6, toC: 2, layer: 'land', team: 'blue', pieceType: 'CAPT' } },
+      { title: 'שיט ימי מתחת לגשרים וסימון (⇅)', desc: 'ספינה (🚢) שטה בים ועוברת מתחת לגשר! כשיש כלי מעל וכלי מתחת מופיע חץ (⇅), ורק הספינה יכולה לתקוף מלמטה.', demo: { fromR: 6, fromC: 0, toR: 6, toC: 2, layer: 'naval', team: 'blue', pieceType: 'BOAT' } },
+      { title: 'העמסת יחידת יבשה על ספינת תובלה (📦)', desc: 'לחץ בכרטיסיית הכלי על "📦 העמס יחידה" ואז בחר ביחידה הסמוכה להעמסה לתובלה (עד 2 יחידות)!', demo: { fromR: 7, fromC: 4, toR: 6, toC: 4, layer: 'land', team: 'blue', pieceType: 'LIEUT' } },
+      { title: 'הפלגה עם מטען ופריקה בחוף האויב (🪂)', desc: 'לאחר שספינה טעונה מפליגה לגדת האויב, בחר בה ולחץ בכרטיסייה על "🪂 פרוק יחידה" ובחר משבצת יבשה סמוכה!', demo: { fromR: 6, fromC: 4, toR: 5, toC: 4, layer: 'naval', team: 'blue', pieceType: 'BOAT' } },
+      { title: 'מסוק תובלה (🚁 דרגה 7) — טיסה והנחתה', desc: 'המסוק טס עד 3 משבצות מעל ים ויבשה, מעמיס יחידות יבשה ומנחית אותן מעבר לקווי ההגנה.', demo: { fromR: 9, fromC: 3, toR: 6, toC: 3, layer: 'land', team: 'blue', pieceType: 'HELI' } },
+      { title: 'רחפן תקיפה (🛸 דרגה 5)', desc: 'הרחפן טס עד 2 משבצות מעל כל שטח, מפוצץ מוקשי אויב ומעמיס יחידת חי"ר.', demo: { fromR: 9, fromC: 5, toR: 7, toC: 5, layer: 'land', team: 'blue', pieceType: 'DRONE' } },
+      { title: 'מטוס ביון (✈️ טווח 15)', desc: 'מטוס הביון חוצה את המפה בטיסה ארוכה ומבצע סריקת מכ"ם סביבתית לחשיפת כלי אויב.', demo: { fromR: 11, fromC: 8, toR: 4, toC: 8, layer: 'land', team: 'blue', pieceType: 'PLANE' } },
+      { title: 'סנסור מכ"ם (📡) — סריקה ללא קרב', desc: 'בחר בסנסור ולחץ בכרטיסייה על "📡 הפעל סריקת מכ"ם" כדי לחשוף כל אויב מוסתר ברדיוס 2 משבצות.', demo: { fromR: 10, fromC: 7, toR: 9, toC: 7, layer: 'land', team: 'blue', pieceType: 'SENSOR' } },
+      { title: 'פיצוץ מבוקר של פצצה/מוקש (💣)', desc: 'ניתן לבחור מוקש שלך ולהפעיל "💣 פיצוץ מבוקר" שמשמיד אויבים בכל 4 המשבצות הסמוכות.', demo: { fromR: 11, fromC: 4, toR: 11, toC: 4, layer: 'land', team: 'blue', pieceType: 'BOMB' } },
+      { title: 'הטעיה טקטית וערפל 50% (👁️ / ❓)', desc: 'בכרטיסיית הכלי תוכל לחשוף כלי להטעיה, או להעמיס כלי חשוף יחד עם כלי נוסף כדי להחזירו לערפל 50%!', demo: null },
+      { title: 'הכרעת תיקו בעימות חזיתי (⚔️ / 🏳️)', desc: 'כששתי יחידות שוות דרגה מתנגשות, נפתח חלון הכרעה: "🏳️ חדל/נסיגה" או "⚔️ עד המוות" להשמדה הדדית.', demo: { fromR: 7, fromC: 6, toR: 6, toC: 6, layer: 'land', team: 'blue', pieceType: 'COL' } },
+      { title: 'הקמת מפקדת TC ומעגל פריסה', desc: 'בתחילת קרב מותאם או אונליין, מציבים את ה-TC ביבשה ופורסים את הצבא בתוך מעגל הפיקוד (קוטר TC מתכוונן).', demo: null },
+      { title: 'החזרת כלי מהלוח או איפוס הצבה מלא', desc: 'בזמן ההצבה תוכל ללחוץ על כל כלי שהצבת כדי להחזירו לארסנל, או ללחוץ "🔄 אפס הכל" לאיפוס מלא.', demo: null },
+      { title: 'יומן המלחמה המתרחב ונקודות הצבע', desc: 'בתחתית המסך מוצגת הפעולה האחרונה עם נקודה כחולה (שלך) או אדומה (היריב). לחץ "📜 הרחב" לצפייה בכל ההיסטוריה.', demo: null },
+      { title: 'מערכת הבריתות (2 נגד 2) והכרעת ברית', desc: 'במצב ברית, בני הברית רואים זה את כליו של זה. לאחר הבסת האויב בוחרים בין ניצחון משותף להמשך קרב הכרעה.', demo: null },
+      { title: 'אונליין VS, עורך מפות וצ׳אט חי', desc: 'בלובי האונליין תוכל ליצור חדר עם קוד וקישור ישיר, להתחבר לחבר בזמן אמת ולשוחח בצ׳אט החי.', demo: null },
+      { title: 'סיום ההדרכה המעשית — מוכן לקרב!', desc: 'סיימת את כל 25 שלבי ההדרכה המעשית! תוכל להמשיך להתאמן כאן או ללחוץ "המשך ◀" לחזרה לתפריט הראשי.', demo: null }
     ];
+
+    const STUN_CONFIG = {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:global.stun.twilio.com:3478' }
+      ]
+    };
 
     function seededHash(r, c) {
       const x = Math.sin(r * 127.1 + c * 311.7) * 43758.5453123;
@@ -869,10 +784,20 @@
         this.savedRooms = JSON.parse(localStorage.getItem('attacktik_saved_rooms') || '[]');
         this.activeRooms = [];
         this.currentRoomId = null;
+
+        // מצב חיבור רשת P2P אמיתי (PeerJS + WebRTC)
+        this.peerLibLoaded = false;
         this.peer = null;
         this.peerConn = null;
         this.myPeerId = '';
-        this.roomChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('attacktik_online_v1') : null;
+        this.isOnlineMatch = false;
+        this.myTeam = 'blue';
+        this.remoteReadyForBattle = false;
+        this.localReadyForBattle = false;
+        this.pendingHostCode = null;
+        this.pendingJoinCode = null;
+        this.wakeLock = null;
+        this.roomChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('attacktik_online_v2') : null;
 
         this.phase = 'splash';
         this.isCampaign = false;
@@ -924,14 +849,18 @@
         this.audioCtx = null;
 
         this.roomState = {
+          code: '',
           name: 'חדר פיקוד',
           pass: '',
           isAdmin: true,
           preset: 'classic_bridges',
           rows: 12,
           cols: 10,
+          tcRadius: 3,
+          arsenal: 'full',
+          turnTime: 60,
           customTerrain: this.buildTerrain(12, 10, 'classic_bridges'),
-          players: [{ name: this.nickname || 'מפקד', admin: true, ready: true }],
+          players: [],
           chat: []
         };
         this.painter = { grid: [], brush: 0, size: 1, zoom: 1, panX: 0, panY: 0 };
@@ -939,8 +868,9 @@
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
         this.bindEvents();
+        this.bindNetworkLifecycle();
         this.startSplashSequence();
-        setTimeout(() => this.loadPeerJsAsync(), 1400);
+        setTimeout(() => this.loadPeerJsAsync(), 900);
         requestAnimationFrame((t) => this.renderLoop(t));
       }
 
@@ -952,6 +882,15 @@
       resizeCanvas() {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
+      }
+
+      generateRoomCode() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let code = '';
+        for (let i = 0; i < 6; i++) {
+          code += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return code;
       }
 
       playTone(freq = 440, dur = 0.08) {
@@ -983,95 +922,348 @@
         }
       }
 
+      async requestWakeLock() {
+        try {
+          if ('wakeLock' in navigator && !this.wakeLock) {
+            this.wakeLock = await navigator.wakeLock.request('screen');
+            this.wakeLock.addEventListener('release', () => { this.wakeLock = null; });
+          }
+        } catch (e) {}
+      }
+
+      bindNetworkLifecycle() {
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            if (this.isOnlineMatch || !document.getElementById('onlineRoomScreen').classList.contains('hidden')) {
+              this.requestWakeLock();
+              if (this.peer && this.peer.disconnected && !this.peer.destroyed) {
+                try { this.peer.reconnect(); } catch (e) {}
+              }
+              if (!this.roomState.isAdmin && this.roomState.code && (!this.peerConn || !this.peerConn.open)) {
+                this.connectToHostCode(this.roomState.code);
+              }
+            }
+          }
+        });
+        window.addEventListener('online', () => {
+          if (this.peer && this.peer.disconnected && !this.peer.destroyed) {
+            try { this.peer.reconnect(); } catch (e) {}
+          }
+          if (!this.roomState.isAdmin && this.roomState.code && (!this.peerConn || !this.peerConn.open)) {
+            this.connectToHostCode(this.roomState.code);
+          }
+        });
+      }
+
+      updateNetworkStatusUI(lobbyMsg, roomMsg) {
+        const lobbyEl = document.getElementById('lobbyNetworkStatus');
+        const roomEl = document.getElementById('roomConnectionSub');
+        if (lobbyEl && lobbyMsg) lobbyEl.textContent = lobbyMsg;
+        if (roomEl && roomMsg) roomEl.textContent = roomMsg;
+      }
+
       loadPeerJsAsync() {
         if (this.roomChannel) {
           this.roomChannel.onmessage = (ev) => {
             const msg = ev.data;
             if (!msg || !msg.type) return;
             if (msg.type === 'ROOM_ANNOUNCE' && msg.room) {
-              const idx = this.activeRooms.findIndex(r => r.id === msg.room.id);
+              const idx = this.activeRooms.findIndex(r => r.code === msg.room.code);
               if (idx >= 0) this.activeRooms[idx] = msg.room;
               else this.activeRooms.push(msg.room);
               if (!document.getElementById('onlineLobbyScreen').classList.contains('hidden')) {
                 this.renderLobbyLists();
               }
-            } else if (msg.type === 'ROOM_CLOSE' && msg.roomId) {
-              this.activeRooms = this.activeRooms.filter(r => r.id !== msg.roomId);
+            } else if (msg.type === 'ROOM_CLOSE' && msg.code) {
+              this.activeRooms = this.activeRooms.filter(r => r.code !== msg.code);
               if (!document.getElementById('onlineLobbyScreen').classList.contains('hidden')) {
                 this.renderLobbyLists();
               }
             }
           };
         }
+
+        if (typeof Peer !== 'undefined') {
+          this.peerLibLoaded = true;
+          this.onPeerLibraryReady();
+          return;
+        }
+
         try {
           const s = document.createElement('script');
           s.src = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
           s.async = true;
-          s.onload = () => this.initPeerConnection();
-          s.onerror = () => {};
+          s.onload = () => {
+            this.peerLibLoaded = true;
+            this.onPeerLibraryReady();
+          };
+          s.onerror = () => {
+            this.updateNetworkStatusUI('⚠️ לא ניתן לטעון שרת P2P כרגע — בדוק חיבור אינטרנט', '⚠️ שגיאת טעינת רשת P2P');
+          };
           document.head.appendChild(s);
         } catch (e) {}
       }
 
-      initPeerConnection() {
-        try {
-          if (typeof Peer === 'undefined') return;
-          const shortId = 'ATK-' + Math.random().toString(36).substring(2, 7).toUpperCase();
-          this.peer = new Peer(shortId);
-          this.peer.on('open', (id) => {
-            this.myPeerId = id;
-            const codeEl = document.getElementById('roomOnlineCode');
-            if (codeEl && this.roomState.isAdmin) codeEl.textContent = id;
-          });
-          this.peer.on('connection', (conn) => {
-            this.peerConn = conn;
-            this.setupPeerConnection(conn);
-          });
-        } catch (e) {}
+      onPeerLibraryReady() {
+        this.updateNetworkStatusUI('🟢 רשת P2P מוכנה לחיבור אונליין', null);
+        if (this.pendingHostCode) {
+          const code = this.pendingHostCode;
+          this.pendingHostCode = null;
+          this.initHostPeer(code);
+        } else if (this.pendingJoinCode) {
+          const code = this.pendingJoinCode;
+          this.pendingJoinCode = null;
+          this.connectToHostCode(code);
+        }
       }
 
-      setupPeerConnection(conn) {
-        conn.on('open', () => {
-          this.roomState.chat.push({ sender: 'מערכת', text: '🌐 שחקן אונליין התחבר לחדר בזמן אמת!' });
-          if (this.roomState.players.length < 2) {
-            this.roomState.players.push({ name: 'מפקד_רשת', admin: false, ready: true });
-            this.renderRoomPlayers();
-          }
-          this.renderRoomChat();
-          if (this.roomState.isAdmin) {
-            conn.send({ type: 'SYNC_ROOM', state: this.roomState });
+      destroyCurrentPeer() {
+        if (this.peerConn) {
+          try { this.peerConn.close(); } catch (e) {}
+          this.peerConn = null;
+        }
+        if (this.peer) {
+          try { this.peer.destroy(); } catch (e) {}
+          this.peer = null;
+        }
+        this.myPeerId = '';
+      }
+
+      initHostPeer(roomCode) {
+        if (!this.peerLibLoaded || typeof Peer === 'undefined') {
+          this.pendingHostCode = roomCode;
+          this.updateNetworkStatusUI('🔄 טוען ספריית רשת P2P...', '🔄 טוען רשת P2P ומכין קוד חדר...');
+          return;
+        }
+
+        this.destroyCurrentPeer();
+        const hostPeerId = `attacktico-${roomCode}`;
+        this.updateNetworkStatusUI(null, `🔄 רושם חדר ${roomCode} בשרת P2P...`);
+
+        try {
+          this.peer = new Peer(hostPeerId, { debug: 0, config: STUN_CONFIG });
+
+          this.peer.on('open', (id) => {
+            this.myPeerId = id;
+            this.updateNetworkStatusUI('🟢 מחובר לשרת P2P', `🟢 מחובר לרשת P2P • ממתין לחבר שיצטרף עם קוד ${roomCode}...`);
+            const roomObj = {
+              code: roomCode,
+              name: this.roomState.name,
+              host: this.nickname || 'מפקד',
+              pass: this.roomState.pass,
+              playersCount: this.roomState.players.length
+            };
+            if (this.roomChannel) this.roomChannel.postMessage({ type: 'ROOM_ANNOUNCE', room: roomObj });
+          });
+
+          this.peer.on('connection', (conn) => {
+            this.peerConn = conn;
+            this.setupPeerConnection(conn, true);
+          });
+
+          this.peer.on('disconnected', () => {
+            this.updateNetworkStatusUI(null, '⚠️ חיבור P2P הושהה — מתחבר מחדש...');
+            try { this.peer.reconnect(); } catch (e) {}
+          });
+
+          this.peer.on('error', (err) => {
+            if (err && err.type === 'unavailable-id') {
+              const freshCode = this.generateRoomCode();
+              this.roomState.code = freshCode;
+              this.currentRoomId = freshCode;
+              document.getElementById('roomOnlineCode').textContent = freshCode;
+              this.initHostPeer(freshCode);
+            } else {
+              this.updateNetworkStatusUI(null, `⚠️ שגיאת רשת (${err?.type || 'network'}) — מנסה להתחבר מחדש...`);
+            }
+          });
+        } catch (e) {
+          this.updateNetworkStatusUI(null, '⚠️ שגיאה באתחול P2P — בדוק גישה לאינטרנט');
+        }
+      }
+
+      connectToHostCode(rawCode) {
+        const cleanCode = (rawCode || '').trim().toUpperCase();
+        if (!cleanCode) return;
+
+        if (!this.roomState || this.roomState.code !== cleanCode || this.roomState.isAdmin) {
+          this.enterOnlineRoom(`חדר אונליין (${cleanCode})`, '', false, null, cleanCode);
+        }
+
+        if (!this.peerLibLoaded || typeof Peer === 'undefined') {
+          this.pendingJoinCode = cleanCode;
+          this.updateNetworkStatusUI('🔄 טוען ספריית P2P...', `🔄 טוען רשת P2P ומתחבר לחדר ${cleanCode}...`);
+          return;
+        }
+
+        this.destroyCurrentPeer();
+        this.updateNetworkStatusUI(null, `🔄 מתחבר למארח של חדר ${cleanCode}...`);
+
+        try {
+          this.peer = new Peer({ debug: 0, config: STUN_CONFIG });
+
+          this.peer.on('open', (id) => {
+            this.myPeerId = id;
+            const targetPeerId = `attacktico-${cleanCode}`;
+            const conn = this.peer.connect(targetPeerId, { reliable: true });
+            this.peerConn = conn;
+            this.setupPeerConnection(conn, false);
+          });
+
+          this.peer.on('disconnected', () => {
+            this.updateNetworkStatusUI(null, '⚠️ החיבור הושהה — מתחבר מחדש למארח...');
+            try { this.peer.reconnect(); } catch (e) {}
+          });
+
+          this.peer.on('error', (err) => {
+            if (err && err.type === 'peer-unavailable') {
+              this.updateNetworkStatusUI(null, `❌ חדר ${cleanCode} לא נמצא או שנסגר ע"י המארח.`);
+              this.roomState.chat.push({ sender: 'מערכת', text: `❌ לא נמצא מארח פעיל לקוד ${cleanCode}. ודא שהחבר פתח חדר ונשאר במסך החדר.` });
+              this.renderRoomChat();
+            } else {
+              this.updateNetworkStatusUI(null, `⚠️ שגיאת התחברות (${err?.type || 'network'})`);
+            }
+          });
+        } catch (e) {
+          this.updateNetworkStatusUI(null, '⚠️ לא ניתן להתחבר לרשת P2P כעת');
+        }
+      }
+
+      sendPeerMessage(payload) {
+        if (this.peerConn && this.peerConn.open) {
+          try {
+            this.peerConn.send(payload);
+            return true;
+          } catch (e) {}
+        }
+        return false;
+      }
+
+      broadcastRoomSync() {
+        if (!this.roomState.isAdmin) return;
+        this.sendPeerMessage({
+          type: 'SYNC_ROOM',
+          state: {
+            code: this.roomState.code,
+            name: this.roomState.name,
+            pass: this.roomState.pass,
+            preset: this.roomState.preset,
+            rows: this.roomState.rows,
+            cols: this.roomState.cols,
+            tcRadius: Number(document.getElementById('roomTcRadius')?.value) || 3,
+            arsenal: document.getElementById('roomArsenal')?.value || 'full',
+            turnTime: Number(document.getElementById('roomTurnTime')?.value) || 60,
+            customTerrain: this.roomState.customTerrain,
+            players: this.roomState.players
           }
         });
+      }
+
+      setupPeerConnection(conn, asHost) {
+        conn.on('open', () => {
+          this.requestWakeLock();
+          if (asHost) {
+            this.updateNetworkStatusUI('🟢 מחובר אונליין', '🟢 שחקן הצטרף לחדר בזמן אמת!');
+            this.broadcastRoomSync();
+          } else {
+            this.updateNetworkStatusUI('🟢 מחובר אונליין', `🟢 מחובר בזמן אמת לחדר ${this.roomState.code}!`);
+            this.sendPeerMessage({
+              type: 'HELLO_JOIN',
+              name: this.nickname || 'מפקד_אורח',
+              ready: this.roomState.players[0]?.ready || false
+            });
+          }
+        });
+
         conn.on('data', (data) => {
           if (!data || !data.type) return;
-          if (data.type === 'SYNC_ROOM' && data.state) {
-            this.roomState.customTerrain = data.state.customTerrain;
-            this.roomState.rows = data.state.rows;
-            this.roomState.cols = data.state.cols;
+
+          if (data.type === 'HELLO_JOIN' && asHost) {
+            const guestName = data.name || 'מפקד_אורח';
+            this.roomState.players = [
+              this.roomState.players[0],
+              { name: guestName, admin: false, ready: Boolean(data.ready), isAi: false }
+            ];
+            this.roomState.chat.push({ sender: 'מערכת', text: `🌐 ${guestName} הצטרף לחדר בזמן אמת!` });
+            this.renderRoomPlayers();
+            this.renderRoomChat();
+            this.broadcastRoomSync();
+          } else if (data.type === 'PLAYER_READY' && asHost) {
+            if (this.roomState.players[1]) {
+              this.roomState.players[1].ready = Boolean(data.ready);
+              this.renderRoomPlayers();
+              this.broadcastRoomSync();
+            }
+          } else if (data.type === 'SYNC_ROOM' && !asHost && data.state) {
+            const st = data.state;
+            this.roomState.name = st.name || this.roomState.name;
+            this.roomState.preset = st.preset || this.roomState.preset;
+            this.roomState.rows = st.rows || 12;
+            this.roomState.cols = st.cols || 10;
+            this.roomState.tcRadius = st.tcRadius || 3;
+            this.roomState.arsenal = st.arsenal || 'full';
+            this.roomState.turnTime = st.turnTime || 60;
+            if (st.customTerrain) this.roomState.customTerrain = st.customTerrain;
+            if (st.players) this.roomState.players = st.players;
+
+            document.getElementById('roomTitleDisplay').textContent = this.roomState.name;
+            document.getElementById('roomRows').value = this.roomState.rows;
+            document.getElementById('roomCols').value = this.roomState.cols;
+            document.getElementById('roomTcRadius').value = String(this.roomState.tcRadius);
+            document.getElementById('roomArsenal').value = this.roomState.arsenal;
+            document.getElementById('roomTurnTime').value = String(this.roomState.turnTime);
+            this.renderRoomPlayers();
             this.renderRoomPreview();
           } else if (data.type === 'CHAT' && data.msg) {
             this.roomState.chat.push(data.msg);
             this.renderRoomChat();
+            if (this.phase === 'battle' || this.phase === 'deploy') {
+              const row = document.createElement('div');
+              row.innerHTML = `<span class="font-black text-rose-400">${data.msg.sender}:</span> <span class="text-slate-200">${data.msg.text}</span>`;
+              document.getElementById('battleChatList').appendChild(row);
+              document.getElementById('battleChatUnreadDot').classList.remove('hidden');
+            }
+          } else if (data.type === 'START_GAME' && data.cfg) {
+            this.beginOnlineMatchFromConfig(data.cfg, false);
+          } else if (data.type === 'DEPLOY_DONE' && data.snapshot) {
+            this.applyRemoteDeployment(data.snapshot);
           } else if (data.type === 'MOVE' && data.payload && this.phase === 'battle') {
             const { fromR, fromC, fromLayer, move } = data.payload;
-            this.performMove(fromR, fromC, fromLayer, move);
+            this.performMove(fromR, fromC, fromLayer, move, true);
+          } else if (data.type === 'BLUFF_REVEAL') {
+            const grid = data.layer === 'naval' ? this.navalGrid : this.landGrid;
+            const u = grid[data.r]?.[data.c];
+            if (u) {
+              u.revealed = true;
+              u.fiftyPercentInfo = u.name;
+              this.logAction('red', `👁️ היריב חשף בפניך את ${u.name} ב-${this.formatCoord(data.r, data.c)}.`);
+            }
+          } else if (data.type === 'ABILITY_RADAR') {
+            this.spawnExplosionFx(data.r, data.c, '#f43f5e', 'radar');
+            this.logAction('red', `📡 היריב הפעיל סריקת מכ"ם ב-${this.formatCoord(data.r, data.c)}.`);
+            this.endTurnAndAdvance('blue');
+          } else if (data.type === 'ABILITY_BOMB') {
+            const grid = data.layer === 'naval' ? this.navalGrid : this.landGrid;
+            grid[data.r][data.c] = null;
+            this.spawnExplosionFx(data.r, data.c, '#f97316', 'blast');
+            const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            for (const [dr, dc] of dirs) {
+              const nr = data.r + dr, nc = data.c + dc;
+              if (nr >= 0 && nr < this.rows && nc >= 0 && nc < this.cols && this.landGrid[nr][nc]?.team === 'blue') {
+                this.landGrid[nr][nc] = null;
+              }
+            }
+            this.logAction('red', `💣 היריב הפעיל פיצוץ מבוקר ב-${this.formatCoord(data.r, data.c)}!`);
+            this.endTurnAndAdvance('blue');
           }
         });
-      }
 
-      connectToOnlineCode(code) {
-        const cleanCode = (code || '').trim();
-        if (!cleanCode) return;
-        this.enterOnlineRoom(`חדר רשת (${cleanCode})`, '', false);
-        const codeEl = document.getElementById('roomOnlineCode');
-        if (codeEl) codeEl.textContent = cleanCode;
-        if (this.peer) {
-          try {
-            const conn = this.peer.connect(cleanCode);
-            this.peerConn = conn;
-            this.setupPeerConnection(conn);
-          } catch (e) {}
-        }
+        conn.on('close', () => {
+          this.updateNetworkStatusUI(null, '⚠️ החיבור עם השחקן השני נותק — ממתין להתחברות מחדש...');
+          if (this.phase === 'battle' || this.phase === 'deploy') {
+            this.logAction('red', '⚠️ החיבור עם היריב הושהה זמנית. ממתין לחזרתו...');
+          }
+        });
       }
 
       formatCoord(r, c) {
@@ -1162,6 +1354,7 @@
 
       openMainMenuWithGuard() {
         this.clearTimers();
+        this.isOnlineMatch = false;
         this.phase = 'menu';
         this.hideAllOverlays();
         const menu = document.getElementById('mainMenu');
@@ -1191,7 +1384,7 @@
       }
 
       saveAutoState() {
-        if (this.phase !== 'battle' || this.isGameOver) return;
+        if (this.phase !== 'battle' || this.isGameOver || this.isOnlineMatch) return;
         try {
           const payload = {
             rows: this.rows,
@@ -1214,6 +1407,7 @@
           const data = JSON.parse(raw);
           this.hideAllOverlays();
           this.phase = 'battle';
+          this.isOnlineMatch = false;
           this.rows = data.rows;
           this.cols = data.cols;
           this.terrain = data.terrain;
@@ -1362,17 +1556,17 @@
       renderLobbyLists() {
         const actEl = document.getElementById('activeRoomsList');
         if (this.activeRooms.length === 0) {
-          actEl.innerHTML = `<div class="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 text-xs text-slate-400 text-center">אין חדרים פתוחים כעת. צור חדר חדש למעלה.</div>`;
+          actEl.innerHTML = `<div class="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 text-xs text-slate-400 text-center">אין חדרים בלובי המקומי. לחץ "צור חדר אונליין" וקבל קוד וקישור לשיתוף עם חבר!</div>`;
         } else {
           actEl.innerHTML = this.activeRooms.map(r => `
             <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
               <div>
-                <div class="font-bold text-xs text-white">${r.pass ? '🔒' : '🟢'} ${r.name}</div>
-                <div class="text-[11px] text-slate-400">אדמין: ${r.host} • ${r.playersCount || 1}/2</div>
+                <div class="font-bold text-xs text-white">${r.pass ? '🔒' : '🟢'} ${r.name} <span class="font-mono text-sky-400">[${r.code}]</span></div>
+                <div class="text-[11px] text-slate-400">מארח: ${r.host}</div>
               </div>
               <div class="flex items-center gap-1.5">
-                <button data-rid="${r.id}" class="join-room-btn px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 font-black text-xs">היכנס</button>
-                <button data-rid="${r.id}" class="delete-active-room-btn px-2 py-1.5 rounded-lg bg-rose-600/80 hover:bg-rose-500 text-white font-bold text-xs" title="סגור והסר חדר">🗑️</button>
+                <button data-code="${r.code}" class="join-room-btn px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 font-black text-xs">התחבר</button>
+                <button data-code="${r.code}" class="delete-active-room-btn px-2 py-1.5 rounded-lg bg-rose-600/80 hover:bg-rose-500 text-white font-bold text-xs">🗑️</button>
               </div>
             </div>
           `).join('');
@@ -1380,25 +1574,21 @@
 
         actEl.querySelectorAll('.join-room-btn').forEach(btn => {
           btn.addEventListener('click', () => {
-            const room = this.activeRooms.find(x => x.id === btn.dataset.rid);
-            if (!room) return;
-            this.currentRoomId = room.id;
-            this.enterOnlineRoom(room.name, room.pass, room.isAdmin !== false);
+            this.connectToHostCode(btn.dataset.code);
           });
         });
 
         actEl.querySelectorAll('.delete-active-room-btn').forEach(btn => {
           btn.addEventListener('click', () => {
-            const rid = btn.dataset.rid;
-            this.activeRooms = this.activeRooms.filter(x => x.id !== rid);
-            if (this.currentRoomId === rid) this.currentRoomId = null;
+            const code = btn.dataset.code;
+            this.activeRooms = this.activeRooms.filter(x => x.code !== code);
             this.renderLobbyLists();
           });
         });
 
         const savEl = document.getElementById('savedRoomsList');
         if (this.savedRooms.length === 0) {
-          savEl.innerHTML = `<div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-500">עדיין לא נשמרו חדרים מותאמים.</div>`;
+          savEl.innerHTML = `<div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-500">עדיין לא נשמרו תבניות חדרים.</div>`;
         } else {
           savEl.innerHTML = this.savedRooms.map((sr, idx) => `
             <div class="p-3 rounded-xl bg-slate-900 border border-amber-500/30 flex items-center justify-between gap-2">
@@ -1415,10 +1605,10 @@
           savEl.querySelectorAll('.load-saved-room-btn').forEach(btn => {
             btn.addEventListener('click', () => {
               const sr = this.savedRooms[Number(btn.dataset.sidx)];
-              const newId = 'room_' + Date.now();
-              this.currentRoomId = newId;
-              this.activeRooms.push({ id: newId, name: sr.name, host: this.nickname, pass: '', isAdmin: true, playersCount: 1 });
-              this.enterOnlineRoom(sr.name, '', true, sr);
+              const newCode = this.generateRoomCode();
+              this.currentRoomId = newCode;
+              this.enterOnlineRoom(sr.name, '', true, sr, newCode);
+              this.initHostPeer(newCode);
             });
           });
           savEl.querySelectorAll('.delete-saved-room-btn').forEach(btn => {
@@ -1431,33 +1621,40 @@
         }
       }
 
-      enterOnlineRoom(name, pass, isAdmin, savedPreset = null) {
+      enterOnlineRoom(name, pass, isAdmin, savedPreset = null, roomCode = null) {
         this.hideAllOverlays();
         document.getElementById('onlineRoomScreen').classList.remove('hidden');
 
+        const code = roomCode || this.generateRoomCode();
+        this.currentRoomId = code;
         const initRows = savedPreset ? (savedPreset.rows || savedPreset.customTerrain.length) : 12;
         const initCols = savedPreset ? (savedPreset.cols || savedPreset.customTerrain[0].length) : 10;
 
         this.roomState = {
+          code,
           name,
           pass,
           isAdmin,
           preset: savedPreset ? savedPreset.preset : 'classic_bridges',
           rows: initRows,
           cols: initCols,
+          tcRadius: savedPreset ? (savedPreset.tcRadius || 3) : 3,
+          arsenal: savedPreset ? (savedPreset.arsenal || 'full') : 'full',
+          turnTime: savedPreset ? (savedPreset.turnTime || 60) : 60,
           customTerrain: savedPreset ? savedPreset.customTerrain.map(r => [...r]) : this.buildTerrain(initRows, initCols, 'classic_bridges'),
           players: isAdmin
-            ? [{ name: this.nickname, admin: true, ready: true }]
-            : [{ name: this.nickname, admin: false, ready: false }, { name: 'אדמין_חדר', admin: true, ready: true }],
-          chat: [{ sender: 'מערכת', text: `ברוכים הבאים לחדר "${name}".` }]
+            ? [{ name: this.nickname || 'מפקד', admin: true, ready: true, isAi: false }]
+            : [{ name: this.nickname || 'מפקד_אורח', admin: false, ready: false, isAi: false }],
+          chat: [{ sender: 'מערכת', text: isAdmin
+            ? `חדר אונליין נוצר! שתף את הקוד ${code} או הקישור עם חברך.`
+            : `מתחבר לחדר ${code}... ממתין לאישור חיבור מהמארח.` }]
         };
 
         document.getElementById('roomRows').value = initRows;
         document.getElementById('roomCols').value = initCols;
         document.getElementById('roomTitleDisplay').textContent = name;
         document.getElementById('roomPassBadge').textContent = pass ? `🔒 סיסמה: ${pass}` : '🟢 חדר פתוח';
-        const codeEl = document.getElementById('roomOnlineCode');
-        if (codeEl) codeEl.textContent = this.myPeerId || this.currentRoomId || 'LOCAL-VS';
+        document.getElementById('roomOnlineCode').textContent = code;
 
         const adminControls = ['roomMapPreset', 'btnRandomMapRoom', 'btnLoadSavedIntoRoom', 'roomTcRadius', 'roomArsenal', 'roomTurnTime', 'roomRows', 'roomCols', 'btnOpenMapPainter', 'btnStartOnlineBattle', 'btnSaveRoomPreset'];
         adminControls.forEach(id => {
@@ -1465,6 +1662,7 @@
           if (el) el.disabled = !isAdmin;
         });
 
+        document.getElementById('btnAddAiIfSolo').classList.toggle('hidden', !isAdmin);
         document.getElementById('btnToggleReady').classList.toggle('hidden', isAdmin);
         document.getElementById('btnStartOnlineBattle').classList.toggle('hidden', !isAdmin);
 
@@ -1475,12 +1673,21 @@
 
       renderRoomPlayers() {
         const el = document.getElementById('roomPlayersList');
-        el.innerHTML = this.roomState.players.map(p => `
+        let html = this.roomState.players.map(p => `
           <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-950/90 border border-slate-800 text-xs">
-            <span class="font-bold text-white">${p.admin ? '👑' : '🎖️'} ${p.name}</span>
+            <span class="font-bold text-white">${p.admin ? '👑' : (p.isAi ? '🤖' : '🎖️')} ${p.name}</span>
             <span class="${p.ready ? 'text-emerald-400 font-black' : 'text-amber-400 font-bold'}">${p.ready ? '✅ מוכן לקרב' : '⏳ לא מוכן'}</span>
           </div>
         `).join('');
+
+        if (this.roomState.isAdmin && this.roomState.players.length < 2) {
+          html += `
+            <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-950/50 border border-dashed border-sky-500/40 text-xs text-sky-300">
+              <span>📡 ממתין לשחקן אונליין שיצטרף (קוד: <strong class="font-mono">${this.roomState.code}</strong>)...</span>
+            </div>
+          `;
+        }
+        el.innerHTML = html;
       }
 
       renderRoomChat() {
@@ -1508,7 +1715,41 @@
         }
       }
 
-      /* ================= 4. הצבת TC, קמפיין ומכניקת קרב ================= */
+      /* ================= 4. התחלת קרב אונליין, הצבת TC ומכניקת קרב ================= */
+      beginOnlineMatchFromConfig(cfg, isHostInitiator) {
+        const hasHumanPeer = Boolean(this.peerConn && this.peerConn.open);
+        const hasAiSelected = this.roomState.players.some(p => p.isAi);
+
+        if (isHostInitiator && !hasHumanPeer && !hasAiSelected) {
+          this.roomState.chat.push({
+            sender: 'מערכת',
+            text: '⚠️ עדיין לא הצטרף חבר לחדר! שלח לו את הקוד/קישור והמתן שיופיע ברשימה, או לחץ "🤖 שחק נגד AI במקום".'
+          });
+          this.renderRoomChat();
+          return;
+        }
+
+        if (isHostInitiator && hasHumanPeer) {
+          this.sendPeerMessage({ type: 'START_GAME', cfg });
+        }
+
+        this.isOnlineMatch = hasHumanPeer;
+        this.myTeam = isHostInitiator ? 'blue' : 'red';
+        this.remoteReadyForBattle = false;
+        this.localReadyForBattle = false;
+        this.requestWakeLock();
+
+        this.startTcDeployment(
+          cfg.rows,
+          cfg.cols,
+          cfg.preset,
+          cfg.customTerrain,
+          cfg.tcRadius,
+          true,
+          cfg.arsenal
+        );
+      }
+
       startTcDeployment(rows, cols, preset, customGrid, tcRadius, useTimer, arsenalType) {
         this.hideAllOverlays();
         this.phase = 'deploy';
@@ -1642,10 +1883,69 @@
         document.getElementById('btnConfirmDeploy').classList.remove('hidden');
       }
 
+      collectLocalDeploymentSnapshot() {
+        const list = [];
+        for (let r = 0; r < this.rows; r++) {
+          for (let c = 0; c < this.cols; c++) {
+            const lp = this.landGrid[r][c];
+            if (lp && lp.team === 'blue' && lp.type !== 'TC') {
+              list.push({ r: this.rows - 1 - r, c: this.cols - 1 - c, layer: 'land', type: lp.type });
+            }
+            const np = this.navalGrid[r][c];
+            if (np && np.team === 'blue') {
+              list.push({ r: this.rows - 1 - r, c: this.cols - 1 - c, layer: 'naval', type: np.type });
+            }
+          }
+        }
+        return list;
+      }
+
+      applyRemoteDeployment(snapshot) {
+        if (!Array.isArray(snapshot)) return;
+        for (const item of snapshot) {
+          if (item.r >= 0 && item.r < this.rows && item.c >= 0 && item.c < this.cols) {
+            const p = this.makePiece(item.type, 'red', false);
+            if (item.layer === 'naval') this.navalGrid[item.r][item.c] = p;
+            else this.landGrid[item.r][item.c] = p;
+          }
+        }
+        this.remoteReadyForBattle = true;
+        if (this.localReadyForBattle) {
+          this.enterActiveOnlineBattle();
+        } else {
+          this.logAction('red', '✅ היריב סיים לפרוס את כוחותיו וממתין שתסיים את ההצבה.');
+        }
+      }
+
+      enterActiveOnlineBattle() {
+        this.phase = 'battle';
+        this.currentTurn = this.myTeam === 'blue' ? 'blue' : 'red';
+        document.getElementById('deployPanel').classList.add('hidden');
+        this.updateTurnHud();
+        this.logAction(this.currentTurn, this.currentTurn === 'blue'
+          ? '🚀 שני המפקדים פרסו כוחות! הקרב החל — תורך לפתוח.'
+          : '🚀 שני המפקדים פרסו כוחות! הקרב החל — ממתין למהלך הפתיחה של המארח...');
+        if (this.useTurnTimer) this.startTurnTimer();
+      }
+
       finishDeployment() {
         if (this.blueTC && this.landGrid[this.blueTC.r]?.[this.blueTC.c]?.type === 'TC') {
           this.landGrid[this.blueTC.r][this.blueTC.c] = null;
         }
+
+        if (this.isOnlineMatch && this.peerConn && this.peerConn.open) {
+          this.localReadyForBattle = true;
+          document.getElementById('deployPanel').classList.add('hidden');
+          const snapshot = this.collectLocalDeploymentSnapshot();
+          this.sendPeerMessage({ type: 'DEPLOY_DONE', snapshot });
+          if (this.remoteReadyForBattle) {
+            this.enterActiveOnlineBattle();
+          } else {
+            this.logAction('blue', '⏳ הפריסה שלך נשלחה! ממתין שהיריב יסיים להציב את כוחותיו...');
+          }
+          return;
+        }
+
         this.deployEnemyForces(6);
         this.phase = 'battle';
         this.currentTurn = 'blue';
@@ -1659,6 +1959,7 @@
       startCampaignStage(lvl) {
         this.hideAllOverlays();
         this.phase = 'battle';
+        this.isOnlineMatch = false;
         this.isCampaign = true;
         this.campaignLevel = lvl;
         const presets = ['classic_bridges', 'twin_bridges', 'river_delta', 'cross_bridges', 'coral_maze', 'peninsula_fort', 'four_corners', 'archipelago', 'canyon_pass'];
@@ -1779,7 +2080,7 @@
         if (this.selected) {
           const move = this.validMoves.find(m => m.r === r && m.c === c);
           if (move) {
-            this.performMove(this.selected.r, this.selected.c, this.selected.layer, move);
+            this.performMove(this.selected.r, this.selected.c, this.selected.layer, move, false);
             return;
           }
         }
@@ -2055,13 +2356,13 @@
         this.fxEffects.push({ r, c, color, kind, startTime: performance.now(), dur: 520, particles });
       }
 
-      performMove(fromR, fromC, fromLayer, move) {
+      performMove(fromR, fromC, fromLayer, move, isFromRemote = false) {
         if (this.animMove) return;
         const srcGrid = fromLayer === 'naval' ? this.navalGrid : this.landGrid;
         const attacker = srcGrid[fromR][fromC];
         if (!attacker) return;
 
-        if (move.isUnload && attacker.cargo && attacker.cargo.length > 1 && this.selectedUnloadIdx === null && attacker.team === 'blue') {
+        if (!isFromRemote && move.isUnload && attacker.cargo && attacker.cargo.length > 1 && this.selectedUnloadIdx === null && attacker.team === 'blue') {
           this.pendingUnload = { fromR, fromC, fromLayer, move };
           const listEl = document.getElementById('unloadSelectList');
           listEl.innerHTML = attacker.cargo.map((unit, idx) => `
@@ -2076,11 +2377,28 @@
               document.getElementById('unloadSelectModal').classList.add('hidden');
               const p = this.pendingUnload;
               this.pendingUnload = null;
-              if (p) this.performMove(p.fromR, p.fromC, p.fromLayer, p.move);
+              if (p) this.performMove(p.fromR, p.fromC, p.fromLayer, p.move, false);
             });
           });
           document.getElementById('unloadSelectModal').classList.remove('hidden');
           return;
+        }
+
+        if (!isFromRemote && this.isOnlineMatch && attacker.team === 'blue') {
+          this.sendPeerMessage({
+            type: 'MOVE',
+            payload: {
+              fromR: this.rows - 1 - fromR,
+              fromC: this.cols - 1 - fromC,
+              fromLayer,
+              move: {
+                ...move,
+                r: this.rows - 1 - move.r,
+                c: this.cols - 1 - move.c,
+                unloadIdx: this.selectedUnloadIdx
+              }
+            }
+          });
         }
 
         this.selected = null;
@@ -2088,8 +2406,9 @@
         document.getElementById('selectedUnitCard').classList.add('hidden');
 
         if (move.isUnload && attacker.cargo && attacker.cargo.length > 0) {
-          const popIdx = (this.selectedUnloadIdx !== null && attacker.cargo[this.selectedUnloadIdx])
-            ? this.selectedUnloadIdx
+          const chosenIdx = isFromRemote && typeof move.unloadIdx === 'number' ? move.unloadIdx : this.selectedUnloadIdx;
+          const popIdx = (chosenIdx !== null && attacker.cargo[chosenIdx])
+            ? chosenIdx
             : attacker.cargo.length - 1;
           this.selectedUnloadIdx = null;
           const [passenger] = attacker.cargo.splice(popIdx, 1);
@@ -2325,6 +2644,9 @@
               }
             }
           }
+          if (this.isOnlineMatch) {
+            this.sendPeerMessage({ type: 'ABILITY_RADAR', r: this.rows - 1 - r, c: this.cols - 1 - c });
+          }
           this.spawnExplosionFx(r, c, '#38bdf8', 'radar');
           this.playTone(840, 0.14);
           this.logAction('blue', `📡 ${p.name} הפעיל סריקת מכ"ם ב-${this.formatCoord(r, c)} וחשף ${found} יחידות אויב!`);
@@ -2334,6 +2656,9 @@
           this.endTurnAndAdvance('red');
         } else if (p.type === 'BOMB') {
           grid[r][c] = null;
+          if (this.isOnlineMatch) {
+            this.sendPeerMessage({ type: 'ABILITY_BOMB', r: this.rows - 1 - r, c: this.cols - 1 - c, layer });
+          }
           this.spawnExplosionFx(r, c, '#f97316', 'blast');
           this.playTone(130, 0.28);
           const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
@@ -2425,6 +2750,9 @@
         if (nextTeam === 'blue') {
           this.isAiBusy = false;
           if (this.useTurnTimer) this.startTurnTimer();
+        } else if (this.isOnlineMatch) {
+          this.isAiBusy = false;
+          if (this.useTurnTimer) this.startTurnTimer();
         } else {
           this.runEnemyAiTurn();
         }
@@ -2471,7 +2799,7 @@
             const topPool = candidates.slice(0, Math.min(4, candidates.length));
             const pick = topPool[Math.floor(Math.random() * topPool.length)];
             this.isAiBusy = false;
-            this.performMove(pick.r, pick.c, pick.layer, pick.move);
+            this.performMove(pick.r, pick.c, pick.layer, pick.move, false);
           } catch (err) {
             this.isAiBusy = false;
             this.endTurnAndAdvance('blue');
@@ -2514,7 +2842,7 @@
           lbl.className = 'text-xs sm:text-sm font-black text-sky-300';
         } else {
           dot.className = 'w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_8px_#f43f5e]';
-          lbl.textContent = 'תור האויב...';
+          lbl.textContent = this.isOnlineMatch ? 'תור החבר אונליין...' : 'תור האויב...';
           lbl.className = 'text-xs sm:text-sm font-black text-rose-400';
         }
       }
@@ -3418,6 +3746,7 @@
           const deployMode = document.getElementById('customDeployMode').value;
           this.allianceMode = document.getElementById('customModeSelect').value === 'alliance_2v2';
           this.aiDifficulty = document.getElementById('customAiDiff').value;
+          this.isOnlineMatch = false;
 
           if (deployMode === 'tc_setup') {
             this.startTcDeployment(r, c, preset, this.customTerrainOverride, tcRad, true, 'full');
@@ -3454,23 +3783,31 @@
         });
 
         this.onClick('btnCreateOnlineRoom', () => {
-          const rName = document.getElementById('newRoomName').value.trim() || `חדר של ${this.nickname}`;
+          const rName = document.getElementById('newRoomName').value.trim() || `חדר של ${this.nickname || 'מפקד'}`;
           const rPass = document.getElementById('newRoomPass').value.trim();
-          const newId = this.myPeerId || ('room_' + Date.now());
-          this.currentRoomId = newId;
-          const roomObj = { id: newId, name: rName, host: this.nickname, pass: rPass, isAdmin: true, playersCount: 1 };
-          this.activeRooms.push(roomObj);
-          if (this.roomChannel) this.roomChannel.postMessage({ type: 'ROOM_ANNOUNCE', room: roomObj });
+          const newCode = this.generateRoomCode();
           document.getElementById('newRoomName').value = '';
           document.getElementById('newRoomPass').value = '';
-          this.enterOnlineRoom(rName, rPass, true);
+          this.enterOnlineRoom(rName, rPass, true, null, newCode);
+          this.initHostPeer(newCode);
         });
         this.onClick('btnJoinByCode', () => {
           const code = document.getElementById('joinByCodeInput')?.value;
-          if (code && code.trim()) this.connectToOnlineCode(code);
+          if (code && code.trim()) this.connectToHostCode(code);
+        });
+        this.onClick('btnCopyRoomCodeOnly', () => {
+          const code = this.roomState.code || '';
+          const tmp = document.createElement('textarea');
+          tmp.value = code;
+          document.body.appendChild(tmp);
+          tmp.select();
+          try { document.execCommand('copy'); } catch (e) {}
+          document.body.removeChild(tmp);
+          this.roomState.chat.push({ sender: 'מערכת', text: `📋 קוד החדר (${code}) הועתק! שלח אותו לחבר.` });
+          this.renderRoomChat();
         });
         this.onClick('btnCopyRoomInvite', () => {
-          const code = this.myPeerId || this.currentRoomId || '';
+          const code = this.roomState.code || '';
           const baseUrl = window.location.href.split('?')[0];
           const shareText = code ? `${baseUrl}?room=${encodeURIComponent(code)}` : baseUrl;
           const tmp = document.createElement('textarea');
@@ -3479,7 +3816,7 @@
           tmp.select();
           try { document.execCommand('copy'); } catch (e) {}
           document.body.removeChild(tmp);
-          this.roomState.chat.push({ sender: 'מערכת', text: `📋 קישור/קוד הזמנה הועתק: ${shareText}` });
+          this.roomState.chat.push({ sender: 'מערכת', text: `🔗 קישור ההזמנה הישיר הועתק: ${shareText}` });
           this.renderRoomChat();
         });
         document.getElementById('roomMapPreset').addEventListener('change', (e) => {
@@ -3487,17 +3824,21 @@
           this.roomState.preset = val;
           if (val !== 'custom_drawn') this.roomState.customTerrain = this.buildTerrain(this.roomState.rows, this.roomState.cols, val);
           this.renderRoomPreview();
+          this.broadcastRoomSync();
         });
-        ['roomRows', 'roomCols'].forEach(id => {
+        ['roomRows', 'roomCols', 'roomTcRadius', 'roomArsenal', 'roomTurnTime'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.addEventListener('change', () => {
             this.roomState.rows = Math.min(99, Math.max(8, Number(document.getElementById('roomRows').value) || 12));
             this.roomState.cols = Math.min(99, Math.max(8, Number(document.getElementById('roomCols').value) || 10));
             document.getElementById('roomRows').value = this.roomState.rows;
             document.getElementById('roomCols').value = this.roomState.cols;
-            const preset = this.roomState.preset === 'custom_drawn' ? 'classic_bridges' : this.roomState.preset;
-            this.roomState.customTerrain = this.buildTerrain(this.roomState.rows, this.roomState.cols, preset);
-            this.renderRoomPreview();
+            if (id === 'roomRows' || id === 'roomCols') {
+              const preset = this.roomState.preset === 'custom_drawn' ? 'classic_bridges' : this.roomState.preset;
+              this.roomState.customTerrain = this.buildTerrain(this.roomState.rows, this.roomState.cols, preset);
+              this.renderRoomPreview();
+            }
+            this.broadcastRoomSync();
           });
         });
         this.onClick('btnRandomMapRoom', () => {
@@ -3507,6 +3848,7 @@
           this.roomState.preset = pick;
           this.roomState.customTerrain = this.buildTerrain(this.roomState.rows, this.roomState.cols, pick);
           this.renderRoomPreview();
+          this.broadcastRoomSync();
         });
         this.onClick('btnSaveRoomPreset', () => {
           this.savedRooms.push({
@@ -3532,50 +3874,56 @@
           document.getElementById('roomCols').value = this.roomState.cols;
           this.roomState.customTerrain = last.customTerrain.map(r => [...r]);
           this.renderRoomPreview();
+          this.broadcastRoomSync();
         });
         this.onClick('btnCloseRoom', () => {
           this.roomState.chat = [];
-          if (this.currentRoomId) {
-            if (this.roomChannel) this.roomChannel.postMessage({ type: 'ROOM_CLOSE', roomId: this.currentRoomId });
-            this.activeRooms = this.activeRooms.filter(x => x.id !== this.currentRoomId);
-            this.currentRoomId = null;
+          if (this.roomState.code) {
+            if (this.roomChannel) this.roomChannel.postMessage({ type: 'ROOM_CLOSE', code: this.roomState.code });
+            this.activeRooms = this.activeRooms.filter(x => x.code !== this.roomState.code);
           }
+          this.destroyCurrentPeer();
           this.openOnlineLobby();
         });
-        this.onClick('btnSimJoinPlayer', () => {
+        this.onClick('btnAddAiIfSolo', () => {
           if (this.roomState.players.length < 2) {
-            this.roomState.players.push({ name: 'מפקד_אורח', admin: false, ready: true });
-            this.roomState.chat.push({ sender: 'מערכת', text: 'מפקד_אורח הצטרף לחדר וסימן מוכן.' });
+            this.roomState.players.push({ name: 'יריב AI ממוחשב', admin: false, ready: true, isAi: true });
+            this.roomState.chat.push({ sender: 'מערכת', text: '🤖 הוספת יריב AI ידנית למשחק סולו.' });
             this.renderRoomPlayers();
             this.renderRoomChat();
           }
         });
         this.onClick('btnToggleReady', () => {
-          const me = this.roomState.players[0];
+          const me = this.roomState.players.find(p => !p.admin) || this.roomState.players[0];
+          if (!me) return;
           me.ready = !me.ready;
           const btn = document.getElementById('btnToggleReady');
           btn.textContent = me.ready ? '✅ מוכן לקרב (לחץ לביטול)' : '⏳ לא מוכן (לחץ לאישור)';
           btn.className = me.ready ? 'flex-1 py-3 rounded-2xl bg-emerald-500 text-slate-950 font-black text-sm' : 'flex-1 py-3 rounded-2xl bg-amber-500 text-slate-950 font-black text-sm';
+          this.sendPeerMessage({ type: 'PLAYER_READY', ready: me.ready });
           this.renderRoomPlayers();
         });
         this.onClick('btnSendRoomChat', () => {
           const inp = document.getElementById('roomChatInput');
           if (!inp.value.trim()) return;
-          const msgObj = { sender: this.nickname, text: inp.value.trim() };
+          const msgObj = { sender: this.nickname || 'מפקד', text: inp.value.trim() };
           this.roomState.chat.push(msgObj);
-          if (this.peerConn && this.peerConn.open) {
-            try { this.peerConn.send({ type: 'CHAT', msg: msgObj }); } catch (e) {}
-          }
+          this.sendPeerMessage({ type: 'CHAT', msg: msgObj });
           inp.value = '';
           this.renderRoomChat();
         });
         this.onClick('btnStartOnlineBattle', () => {
-          this.turnTimeLimit = Number(document.getElementById('roomTurnTime').value) || 60;
-          const tcRad = Number(document.getElementById('roomTcRadius').value) || 3;
-          const arsenal = document.getElementById('roomArsenal').value;
-          const rCount = Math.min(99, Math.max(8, Number(document.getElementById('roomRows').value) || this.roomState.rows));
-          const cCount = Math.min(99, Math.max(8, Number(document.getElementById('roomCols').value) || this.roomState.cols));
-          this.startTcDeployment(rCount, cCount, this.roomState.preset, this.roomState.customTerrain, tcRad, true, arsenal);
+          const cfg = {
+            turnTime: Number(document.getElementById('roomTurnTime').value) || 60,
+            tcRadius: Number(document.getElementById('roomTcRadius').value) || 3,
+            arsenal: document.getElementById('roomArsenal').value,
+            preset: this.roomState.preset,
+            rows: Math.min(99, Math.max(8, Number(document.getElementById('roomRows').value) || this.roomState.rows)),
+            cols: Math.min(99, Math.max(8, Number(document.getElementById('roomCols').value) || this.roomState.cols)),
+            customTerrain: this.roomState.customTerrain
+          };
+          this.turnTimeLimit = cfg.turnTime;
+          this.beginOnlineMatchFromConfig(cfg, true);
         });
 
         this.onClick('btnResetDeploy', () => this.resetDeployment());
@@ -3612,6 +3960,14 @@
           if (p) {
             p.revealed = true;
             p.fiftyPercentInfo = p.name;
+            if (this.isOnlineMatch) {
+              this.sendPeerMessage({
+                type: 'BLUFF_REVEAL',
+                r: this.rows - 1 - this.selected.r,
+                c: this.cols - 1 - this.selected.c,
+                layer: this.selected.layer
+              });
+            }
             this.logAction('blue', `👁️ חשפת ליריב באופן יזום את ${p.name} (הטעיה טקטית).`);
           }
         });
@@ -3653,105 +4009,126 @@
             this.roomState.customTerrain = savedGrid;
             document.getElementById('roomMapPreset').value = 'custom_drawn';
             this.renderRoomPreview();
+            this.broadcastRoomSync();
           }
         });
         this.onClick('btnPainterZoomIn', () => { this.painter.zoom = Math.min(2.6, this.painter.zoom + 0.25); this.drawPainterCanvas(); });
         this.onClick('btnPainterZoomOut', () => { this.painter.zoom = Math.max(0.45, this.painter.zoom - 0.25); this.drawPainterCanvas(); });
         this.onClick('btnPainterZoomReset', () => { this.painter.zoom = 1; this.painter.panX = 0; this.painter.panY = 0; this.drawPainterCanvas(); });
 
-        document.querySelectorAll('.painter-terrain-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            this.painter.brush = Number(btn.dataset.brush);
-            document.querySelectorAll('.painter-terrain-btn').forEach(b => b.classList.replace('bg-emerald-600', 'bg-slate-800'));
-            btn.classList.replace('bg-slate-800', 'bg-emerald-600');
+        document.querySelectorAll('.painter-terrain-btn').forEach(b => {
+          b.addEventListener('click', () => {
+            this.painter.brush = Number(b.dataset.brush);
+            document.querySelectorAll('.painter-terrain-btn').forEach(x => x.className = 'painter-terrain-btn px-3 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold');
+            b.className = 'painter-terrain-btn px-3 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black';
           });
         });
-        document.querySelectorAll('.painter-size-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            this.painter.size = Number(btn.dataset.size);
-            document.querySelectorAll('.painter-size-btn').forEach(b => b.classList.replace('bg-sky-500', 'bg-slate-800'));
-            btn.classList.replace('bg-slate-800', 'bg-sky-500');
+        document.querySelectorAll('.painter-size-btn').forEach(b => {
+          b.addEventListener('click', () => {
+            this.painter.size = Number(b.dataset.size);
+            document.querySelectorAll('.painter-size-btn').forEach(x => x.className = 'painter-size-btn px-2.5 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold');
+            b.className = 'painter-size-btn px-2.5 py-2 rounded-xl bg-sky-500 text-slate-950 text-xs font-black';
           });
         });
 
         const pCanvas = document.getElementById('painterCanvas');
-        let pDrawing = false;
-        let pPanning = false;
-        let pLastPan = { x: 0, y: 0 };
-        let pPinch = null;
-        let pMid = null;
-        pCanvas.addEventListener('pointerdown', (e) => {
-          if (!e.isPrimary || pPinch) {
-            pDrawing = false;
-            pPanning = false;
-            return;
-          }
-          if (this.painter.brush === -1) {
-            pPanning = true;
-            pLastPan = { x: e.clientX, y: e.clientY };
-          } else {
-            pDrawing = true;
-            this.paintAtPoint(e.clientX, e.clientY);
-          }
-        });
-        pCanvas.addEventListener('pointermove', (e) => {
-          if (pPinch || !e.isPrimary) return;
-          if (pPanning) {
-            this.painter.panX += (e.clientX - pLastPan.x);
-            this.painter.panY += (e.clientY - pLastPan.y);
-            pLastPan = { x: e.clientX, y: e.clientY };
-            this.drawPainterCanvas();
-          } else if (pDrawing) {
-            this.paintAtPoint(e.clientX, e.clientY);
-          }
-        });
-        window.addEventListener('pointerup', () => { pDrawing = false; pPanning = false; pPinch = null; pMid = null; });
+        let pGesture = { mode: 'none', lastX: 0, lastY: 0, pinchDist: 0, pinchZoom: 1 };
+
         pCanvas.addEventListener('touchstart', (e) => {
+          e.preventDefault();
           if (e.touches.length >= 2) {
-            pDrawing = false;
-            pPanning = false;
-            const t0 = e.touches[0], t1 = e.touches[1];
-            pPinch = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
-            pMid = { x: (t0.clientX + t1.clientX) / 2, y: (t0.clientY + t1.clientY) / 2 };
-          }
-        }, { passive: true });
-        pCanvas.addEventListener('touchmove', (e) => {
-          if (e.touches.length >= 2) {
-            e.preventDefault();
-            pDrawing = false;
-            pPanning = false;
-            const t0 = e.touches[0], t1 = e.touches[1];
-            const d = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
-            const mx = (t0.clientX + t1.clientX) / 2;
-            const my = (t0.clientY + t1.clientY) / 2;
-            if (pPinch && pMid) {
-              this.painter.zoom = Math.min(2.6, Math.max(0.45, this.painter.zoom * (d / pPinch)));
-              this.painter.panX += (mx - pMid.x);
-              this.painter.panY += (my - pMid.y);
-              this.drawPainterCanvas();
+            pGesture.mode = 'pinch';
+            const t1 = e.touches[0], t2 = e.touches[1];
+            pGesture.pinchDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+            pGesture.pinchZoom = this.painter.zoom;
+            pGesture.lastX = (t1.clientX + t2.clientX) / 2;
+            pGesture.lastY = (t1.clientY + t2.clientY) / 2;
+          } else if (e.touches.length === 1) {
+            const t = e.touches[0];
+            if (this.painter.brush === -1) {
+              pGesture.mode = 'pan';
+              pGesture.lastX = t.clientX;
+              pGesture.lastY = t.clientY;
+            } else {
+              pGesture.mode = 'draw';
+              this.paintAtPoint(t.clientX, t.clientY);
             }
-            pPinch = d;
-            pMid = { x: mx, y: my };
           }
         }, { passive: false });
 
+        pCanvas.addEventListener('touchmove', (e) => {
+          e.preventDefault();
+          if (e.touches.length >= 2) {
+            pGesture.mode = 'pinch';
+            const t1 = e.touches[0], t2 = e.touches[1];
+            const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+            if (pGesture.pinchDist > 0) {
+              this.painter.zoom = Math.min(2.8, Math.max(0.45, pGesture.pinchZoom * (dist / pGesture.pinchDist)));
+            }
+            const midX = (t1.clientX + t2.clientX) / 2;
+            const midY = (t1.clientY + t2.clientY) / 2;
+            this.painter.panX += midX - pGesture.lastX;
+            this.painter.panY += midY - pGesture.lastY;
+            pGesture.lastX = midX;
+            pGesture.lastY = midY;
+            this.drawPainterCanvas();
+          } else if (e.touches.length === 1 && pGesture.mode === 'pan') {
+            const t = e.touches[0];
+            this.painter.panX += t.clientX - pGesture.lastX;
+            this.painter.panY += t.clientY - pGesture.lastY;
+            pGesture.lastX = t.clientX;
+            pGesture.lastY = t.clientY;
+            this.drawPainterCanvas();
+          } else if (e.touches.length === 1 && pGesture.mode === 'draw') {
+            this.paintAtPoint(e.touches[0].clientX, e.touches[0].clientY);
+          }
+        }, { passive: false });
+
+        pCanvas.addEventListener('touchend', (e) => {
+          if (e.touches.length === 0) pGesture.mode = 'none';
+        });
+
+        pCanvas.addEventListener('mousedown', (e) => {
+          if (this.painter.brush === -1) {
+            pGesture.mode = 'pan';
+            pGesture.lastX = e.clientX;
+            pGesture.lastY = e.clientY;
+          } else {
+            pGesture.mode = 'draw';
+            this.paintAtPoint(e.clientX, e.clientY);
+          }
+        });
+        pCanvas.addEventListener('mousemove', (e) => {
+          if (pGesture.mode === 'pan') {
+            this.painter.panX += e.clientX - pGesture.lastX;
+            this.painter.panY += e.clientY - pGesture.lastY;
+            pGesture.lastX = e.clientX;
+            pGesture.lastY = e.clientY;
+            this.drawPainterCanvas();
+          } else if (pGesture.mode === 'draw') {
+            this.paintAtPoint(e.clientX, e.clientY);
+          }
+        });
+        window.addEventListener('mouseup', () => { pGesture.mode = 'none'; });
+
+        this.onClick('btnMenuTutorial', () => this.startTutorialMode(0));
+        this.onClick('btnTutPrev', () => {
+          if (this.tutIndex > 0) this.startTutorialMode(this.tutIndex - 1);
+        });
+        this.onClick('btnTutNext', () => {
+          if (this.tutIndex < TUTORIAL_STEPS.length - 1) {
+            this.startTutorialMode(this.tutIndex + 1);
+          } else {
+            this.openMainMenuWithGuard();
+          }
+        });
+        this.onClick('btnTutReset', () => this.startTutorialMode(this.tutIndex));
+        this.onClick('btnTutReplayDemo', () => this.playTutorialDemo(this.tutIndex));
+
         this.onClick('btnBattleMenu', () => this.openMainMenuWithGuard());
-        this.onClick('btnVictoryMenu', () => this.openMainMenuWithGuard());
-        this.onClick('btnVictoryNext', () => {
-          if (this.isCampaign) this.startCampaignStage(Math.min(50, this.campaignLevel + 1));
-          else this.openMainMenuWithGuard();
-        });
-        this.onClick('btnCamZoomIn', () => { this.cam.zoom = Math.min(2.6, this.cam.zoom + 0.2); });
-        this.onClick('btnCamZoomOut', () => { this.cam.zoom = Math.max(0.35, this.cam.zoom - 0.2); });
+        this.onClick('btnCamZoomIn', () => { this.cam.zoom = Math.min(2.6, this.cam.zoom + 0.25); });
+        this.onClick('btnCamZoomOut', () => { this.cam.zoom = Math.max(0.55, this.cam.zoom - 0.25); });
         this.onClick('btnCamReset', () => this.resetCamera());
-
-        this.onClick('btnToggleHudLog', () => {
-          const box = document.getElementById('hudExpandedLogs');
-          const lbl = document.getElementById('hudLogBtnLabel');
-          const hidden = box.classList.toggle('hidden');
-          lbl.textContent = hidden ? 'הרחב' : 'כווץ';
-        });
-
         this.onClick('btnBattleChatBubble', () => {
           document.getElementById('battleChatPopover').classList.toggle('hidden');
           document.getElementById('battleChatUnreadDot').classList.add('hidden');
@@ -3760,52 +4137,75 @@
         this.onClick('btnSendBattleChat', () => {
           const inp = document.getElementById('battleChatInput');
           if (!inp.value.trim()) return;
+          const msgObj = { sender: this.nickname || 'מפקד', text: inp.value.trim() };
           const row = document.createElement('div');
-          row.innerHTML = `<span class="font-black text-sky-400">${this.nickname}:</span> <span class="text-slate-200">${inp.value.trim()}</span>`;
+          row.innerHTML = `<span class="font-black text-sky-400">${msgObj.sender}:</span> <span class="text-slate-200">${msgObj.text}</span>`;
           document.getElementById('battleChatList').appendChild(row);
+          this.sendPeerMessage({ type: 'CHAT', msg: msgObj });
           inp.value = '';
         });
 
-        this.onClick('btnMenuTutorial', () => {
-          this.hideAllOverlays();
-          this.phase = 'tutorial';
-          this.isCampaign = false;
-          this.useTurnTimer = false;
-          this.tutIndex = 0;
-          this.setupBoardData(12, 10, 'classic_bridges');
-          this.populateDemoBattle(1);
-          document.getElementById('battleHud').classList.remove('hidden');
-          document.getElementById('deployPanel').classList.add('hidden');
-          document.getElementById('sideObjectiveBanner').classList.add('hidden');
-          document.getElementById('battleTimerWrapper').classList.add('hidden');
-          const tutBanner = document.getElementById('tutorialBanner');
-          tutBanner.style.left = '50%';
-          tutBanner.style.top = '64px';
-          tutBanner.style.transform = 'translateX(-50%)';
-          tutBanner.classList.remove('hidden');
-          this.updateTutorialBanner();
+        this.onClick('btnToggleHudLog', () => {
+          const box = document.getElementById('hudExpandedLogs');
+          const lbl = document.getElementById('hudLogBtnLabel');
+          const hidden = box.classList.toggle('hidden');
+          lbl.textContent = hidden ? 'הרחב' : 'צמצם';
         });
-        this.onClick('btnTutPrev', () => {
-          if (this.tutIndex > 0) {
-            this.tutIndex--;
-            this.updateTutorialBanner();
-          }
-        });
-        this.onClick('btnTutNext', () => {
-          if (this.tutIndex < TUTORIAL_STEPS.length - 1) {
-            this.tutIndex++;
-            this.updateTutorialBanner();
+
+        this.onClick('btnVictoryMenu', () => this.openMainMenuWithGuard());
+        this.onClick('btnVictoryNext', () => {
+          document.getElementById('victoryModal').classList.add('hidden');
+          if (this.isCampaign && this.campaignLevel < 50) {
+            this.startCampaignStage(this.campaignLevel + 1);
           } else {
             this.openMainMenuWithGuard();
           }
         });
-        this.onClick('btnTutReset', () => {
-          this.tutIndex = 0;
-          this.setupBoardData(12, 10, 'classic_bridges');
-          this.populateDemoBattle(1);
-          this.updateTutorialBanner();
+
+        this.canvas.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 2) {
+            this.gesture.isPinching = true;
+            const dx = e.touches[0].clientX - e.touches[1].clientX;
+            const dy = e.touches[0].clientY - e.touches[1].clientY;
+            this.gesture.pinchDist = Math.hypot(dx, dy);
+            this.gesture.pinchZoom = this.cam.zoom;
+          } else if (e.touches.length === 1) {
+            this.gesture.active = true;
+            this.gesture.moved = false;
+            this.gesture.startX = e.touches[0].clientX;
+            this.gesture.startY = e.touches[0].clientY;
+            this.gesture.camX = this.cam.x;
+            this.gesture.camY = this.cam.y;
+          }
+        }, { passive: true });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+          if (this.gesture.isPinching && e.touches.length === 2) {
+            const dx = e.touches[0].clientX - e.touches[1].clientX;
+            const dy = e.touches[0].clientY - e.touches[1].clientY;
+            const dist = Math.hypot(dx, dy);
+            if (this.gesture.pinchDist > 0) {
+              this.cam.zoom = Math.min(2.6, Math.max(0.55, this.gesture.pinchZoom * (dist / this.gesture.pinchDist)));
+            }
+          } else if (this.gesture.active && e.touches.length === 1) {
+            const dx = e.touches[0].clientX - this.gesture.startX;
+            const dy = e.touches[0].clientY - this.gesture.startY;
+            if (Math.hypot(dx, dy) > 9) this.gesture.moved = true;
+            if (this.gesture.moved) {
+              this.cam.x = this.gesture.camX + dx;
+              this.cam.y = this.gesture.camY + dy;
+            }
+          }
+        }, { passive: true });
+
+        this.canvas.addEventListener('touchend', (e) => {
+          if (this.gesture.isPinching && e.touches.length < 2) {
+            this.gesture.isPinching = false;
+          } else if (this.gesture.active && !this.gesture.moved && e.changedTouches.length === 1) {
+            this.handleBoardTap(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+          }
+          this.gesture.active = false;
         });
-        this.onClick('btnTutReplayDemo', () => this.playTutorialDemoStep());
 
         this.canvas.addEventListener('mousedown', (e) => {
           this.gesture.active = true;
@@ -3819,122 +4219,95 @@
           if (!this.gesture.active) return;
           const dx = e.clientX - this.gesture.startX;
           const dy = e.clientY - this.gesture.startY;
-          if (Math.hypot(dx, dy) > 5) this.gesture.moved = true;
-          this.cam.x = this.gesture.camX + dx;
-          this.cam.y = this.gesture.camY + dy;
-        });
-        window.addEventListener('mouseup', (e) => {
-          if (this.gesture.active && !this.gesture.moved) this.handleBoardTap(e.clientX, e.clientY);
-          this.gesture.active = false;
-        });
-
-        this.canvas.addEventListener('touchstart', (e) => {
-          if (e.touches.length === 1 && !this.gesture.isPinching) {
-            this.gesture.active = true;
-            this.gesture.moved = false;
-            this.gesture.startX = e.touches[0].clientX;
-            this.gesture.startY = e.touches[0].clientY;
-            this.gesture.camX = this.cam.x;
-            this.gesture.camY = this.cam.y;
-          } else if (e.touches.length === 2) {
-            this.gesture.active = false;
-            this.gesture.moved = true;
-            this.gesture.isPinching = true;
-            this.gesture.pinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-            this.gesture.pinchZoom = this.cam.zoom;
-          }
-        }, { passive: true });
-
-        this.canvas.addEventListener('touchmove', (e) => {
-          if (e.touches.length === 1 && this.gesture.active && !this.gesture.isPinching) {
-            const dx = e.touches[0].clientX - this.gesture.startX;
-            const dy = e.touches[0].clientY - this.gesture.startY;
-            if (Math.hypot(dx, dy) > 6) this.gesture.moved = true;
+          if (Math.hypot(dx, dy) > 6) this.gesture.moved = true;
+          if (this.gesture.moved) {
             this.cam.x = this.gesture.camX + dx;
             this.cam.y = this.gesture.camY + dy;
-          } else if (e.touches.length === 2 && this.gesture.isPinching) {
-            e.preventDefault();
-            const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-            if (this.gesture.pinchDist > 0) {
-              this.cam.zoom = Math.min(2.6, Math.max(0.35, this.gesture.pinchZoom * (d / this.gesture.pinchDist)));
-            }
-          }
-        }, { passive: false });
-
-        this.canvas.addEventListener('touchend', (e) => {
-          if (e.touches.length === 0) {
-            if (this.gesture.active && !this.gesture.moved && !this.gesture.isPinching && e.changedTouches[0]) {
-              this.handleBoardTap(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-            }
-            this.gesture.active = false;
-            this.gesture.isPinching = false;
-            this.gesture.pinchDist = 0;
           }
         });
+        window.addEventListener('mouseup', (e) => {
+          if (this.gesture.active && !this.gesture.moved) {
+            this.handleBoardTap(e.clientX, e.clientY);
+          }
+          this.gesture.active = false;
+        });
+        this.canvas.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          const delta = e.deltaY < 0 ? 0.14 : -0.14;
+          this.cam.zoom = Math.min(2.6, Math.max(0.55, this.cam.zoom + delta));
+        }, { passive: false });
       }
 
-      updateTutorialBanner() {
-        const total = TUTORIAL_STEPS.length;
-        const step = this.tutIndex + 1;
-        const pct = Math.round((step / total) * 100);
-        const item = TUTORIAL_STEPS[this.tutIndex];
-        document.getElementById('tutStepNum').textContent = `${step} מתוך ${total}`;
+      /* ================= 6. מערכת המדריך המעשי (25 שלבים + הדגמה חיה) ================= */
+      startTutorialMode(idx) {
+        this.hideAllOverlays();
+        this.phase = 'tutorial';
+        this.isOnlineMatch = false;
+        this.tutIndex = Math.max(0, Math.min(TUTORIAL_STEPS.length - 1, idx));
+        const step = TUTORIAL_STEPS[this.tutIndex];
+
+        this.setupBoardData(12, 10, 'classic_bridges');
+        this.currentTurn = 'blue';
+        this.populateDemoBattle(1);
+
+        document.getElementById('battleHud').classList.remove('hidden');
+        document.getElementById('deployPanel').classList.add('hidden');
+        document.getElementById('sideObjectiveBanner').classList.add('hidden');
+        document.getElementById('battleTimerWrapper').classList.add('hidden');
+
+        const banner = document.getElementById('tutorialBanner');
+        banner.classList.remove('hidden');
+        banner.style.left = '50%';
+        banner.style.top = '64px';
+        banner.style.transform = 'translateX(-50%)';
+
+        const pct = Math.round(((this.tutIndex + 1) / TUTORIAL_STEPS.length) * 100);
+        document.getElementById('tutStepNum').textContent = String(this.tutIndex + 1);
         document.getElementById('tutPercent').textContent = `${pct}%`;
         document.getElementById('tutProgressBar').style.width = `${pct}%`;
-        document.getElementById('tutStepDesc').innerHTML = `<strong class="text-amber-300">${item.title}:</strong> ${item.desc}`;
-        this.playTutorialDemoStep();
+        document.getElementById('tutStepDesc').innerHTML = `<strong class="text-white">${step.title}:</strong> ${step.desc}`;
+
+        this.updateTurnHud();
+        this.logAction('blue', `🎓 מדריך (${this.tutIndex + 1}/25): ${step.title}`);
+        this.playTutorialDemo(this.tutIndex);
       }
 
-      playTutorialDemoStep() {
-        if (this.phase !== 'tutorial') return;
-        const item = TUTORIAL_STEPS[this.tutIndex];
-        if (!item) return;
-        if (!item.demo) {
-          this.lastMoveTrails = { blue: null, red: null };
-          this.animMove = null;
-          this.logAction('blue', `🎓 שלב ${this.tutIndex + 1}: ${item.title}`);
-          return;
-        }
-        const { fromR, fromC, toR, toC, team, pieceType } = item.demo;
-        const pDef = PIECE_DEFS[pieceType || 'SERG'] || PIECE_DEFS.SERG;
-        const demoPiece = { type: pieceType || 'SERG', ...pDef, team, revealed: team === 'blue' };
-
-        this.lastMoveTrails[team] = {
-          fromR, fromC, toR, toC,
-          cells: [{ r: fromR, c: fromC }, { r: toR, c: toC }],
-          team
-        };
-        if (fromR === toR && fromC === toC) {
-          this.spawnExplosionFx(fromR, fromC, '#facc15', 'radar');
+      playTutorialDemo(idx) {
+        const step = TUTORIAL_STEPS[idx];
+        if (!step || !step.demo) return;
+        const d = step.demo;
+        const demoPiece = this.makePiece(d.pieceType, d.team, d.team === 'blue');
+        const grid = d.layer === 'naval' ? this.navalGrid : this.landGrid;
+        grid[d.fromR][d.fromC] = demoPiece;
+        if (d.fromR !== d.toR || d.fromC !== d.toC) {
+          grid[d.toR][d.toC] = null;
+          setTimeout(() => {
+            if (this.phase === 'tutorial' && this.tutIndex === idx && !this.animMove) {
+              this.performMove(d.fromR, d.fromC, d.layer, { r: d.toR, c: d.toC, targetLayer: d.layer }, false);
+            }
+          }, 420);
         } else {
-          this.animMove = {
-            piece: demoPiece,
-            fromR, fromC, toR, toC,
-            startTime: performance.now(),
-            dur: 560,
-            onDone: () => this.spawnExplosionFx(toR, toC, team === 'blue' ? '#38bdf8' : '#f43f5e', 'radar')
-          };
+          this.spawnExplosionFx(d.fromR, d.fromC, '#f97316', 'blast');
         }
-        this.logAction(team, `🎓 הדגמת שלב ${this.tutIndex + 1}: ${item.title} (${this.formatCoord(fromR, fromC)} ➔ ${this.formatCoord(toR, toC)})`);
       }
     }
 
-    window.onload = () => {
+    window.addEventListener('DOMContentLoaded', () => {
       window.attacktik = new AttacktikApp();
-      const params = new URLSearchParams(window.location.search);
-      const joinCode = params.get('room');
-      if (joinCode) {
-        setTimeout(() => {
-          if (window.attacktik) {
-            document.getElementById('splashScreen')?.classList.add('hidden');
-            if (!window.attacktik.nickname) {
-              window.attacktik.nickname = 'מפקד_' + Math.floor(100 + Math.random() * 899);
-            }
-            window.attacktik.connectToOnlineCode(joinCode);
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const roomParam = params.get('room');
+        if (roomParam && window.attacktik) {
+          const cleanCode = roomParam.trim().toUpperCase();
+          document.getElementById('splashScreen').classList.add('hidden');
+          if (!window.attacktik.nickname) {
+            window.attacktik.nickname = 'מפקד_מוזמן';
+            localStorage.setItem('attacktik_nick', window.attacktik.nickname);
           }
-        }, 1150);
-      }
-    };
+          window.attacktik.connectToHostCode(cleanCode);
+        }
+      } catch (e) {}
+    });
   </script>
 </body>
 </html>
